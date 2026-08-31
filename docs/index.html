@@ -162,6 +162,16 @@
   @keyframes pop{ from{ transform:scale(.6); } to{ transform:scale(1); } }
 
   .hidden{ display:none !important; }
+
+  .companion{ text-align:center; margin:0 0 14px; }
+  .comp-box{ display:inline-flex; align-items:center; justify-content:center; width:56px; height:56px; background:var(--screen); border:4px solid var(--cyan); box-shadow:4px 4px 0 #000; cursor:pointer; transition:transform .15s; }
+  .comp-box:active{ transform:scale(.94); }
+  .comp-em{ font-size:26px; line-height:1; }
+  .comp-box.stage3,.comp-box.stage4,.comp-box.stage5{ border-color:var(--yellow); box-shadow:4px 4px 0 #000,0 0 12px var(--yellow); }
+  .comp-box.stage3 .comp-em,.comp-box.stage4 .comp-em,.comp-box.stage5 .comp-em{ animation:complow 1.6s ease-in-out infinite; }
+  @keyframes complow{ 0%,100%{ filter:drop-shadow(0 0 2px var(--yellow)); } 50%{ filter:drop-shadow(0 0 8px var(--yellow)); } }
+  .comp-name{ margin-top:6px; font-size:11px; letter-spacing:2px; color:var(--dim); }
+  .lvl-rank{ font-size:11px; letter-spacing:2px; color:var(--yellow); margin-top:2px; }
 </style>
 </head>
 <body>
@@ -178,11 +188,14 @@
     <button class="pbtn yellow" onclick="openSettings()">⚙ Menü</button>
   </div>
 
+  <div class="companion" id="companion"></div>
+
   <div class="panel" style="border-color:var(--cyan)">
     <div class="row">
       <div>
         <div class="lvl">Lvl <span id="level">1</span></div>
         <div class="lvl-sub"><span id="totalXP">0</span> XP Total</div>
+        <div class="lvl-rank" id="rank"></div>
       </div>
       <div class="streak-box">
         <div class="streak-num" id="streak">0</div>
@@ -308,9 +321,13 @@
     <div class="colors" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:14px">
       <button class="pbtn ghost" onclick="exportData()">⬇ Backup</button>
       <button class="pbtn ghost" onclick="document.getElementById('importFile').click()">⬆ Laden</button>
-      <button class="pbtn cyan hidden" id="btn-health" onclick="syncHealth({interactive:true})">⌚ Sync</button>
+      <button class="pbtn cyan hidden" id="btn-health" onclick="doHealthSync({interactive:true})">⌚ Sync</button>
     </div>
     <input type="file" id="importFile" accept="application/json,.json" class="hidden" onchange="importData(event)">
+
+    <div class="sec-title cyan" style="font-size:13px;margin:12px 0 6px">📱 iPhone-Bridge</div>
+    <div class="hint" style="margin:0 0 8px">Verbindet Health-App-Daten (inkl. Apple Watch/Strava) über einen iOS-Kurzbefehl. Gist-ID hier eintragen, sobald der Kurzbefehl eingerichtet ist.</div>
+    <input type="text" id="set-gist" placeholder="Secret-Gist-ID">
 
     <div class="sec-title green" style="font-size:13px;margin:2px 0 6px">XP &amp; Belohnungen</div>
     <label>XP je 100 Schritte</label>
@@ -325,6 +342,9 @@
       <button class="pbtn green" id="set-bonus-on" onclick="selBonus=true;renderBonusBtns()">AN</button>
       <button class="pbtn ghost" id="set-bonus-off" onclick="selBonus=false;renderBonusBtns()">AUS</button>
     </div>
+
+    <div class="sec-title" style="color:var(--yellow);font-size:13px;margin:12px 0 6px">⚡ Perks</div>
+    <div id="perks-box"></div>
 
     <div class="sec-title" style="font-size:13px;margin:12px 0 6px">Erinnerungen</div>
     <label>Tägliche Erinnerung – Uhrzeit (0–23)</label>
@@ -439,7 +459,12 @@
     if(S.xpPer10Kcal==null) S.xpPer10Kcal=1;
     if(S.dailyCap==null) S.dailyCap=200;
     if(S.streakBonus==null) S.streakBonus=true;
-    if(!data.questClaims) data.questClaims={}; }
+    if(S.iosBridgeGistId==null) S.iosBridgeGistId='';
+    if(S.xpBoostUntil==null) S.xpBoostUntil=0;
+    if(!data.questClaims) data.questClaims={};
+    if(!data.perks) data.perks={freezeCount:0,boostCharges:0};
+    if(!data.stats) data.stats={weeklyClaims:0,dailyClaims:0};
+    if(data.companionStage==null) data.companionStage=0; }
   function save(){ try{ localStorage.setItem('fitnessXP', JSON.stringify(data)); }catch(e){}
     try{ if(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.Preferences){ Capacitor.Plugins.Preferences.set({ key:'fitnessXP', value:JSON.stringify(data) }); } }catch(e){} }
 
@@ -452,8 +477,14 @@
   function updateStreak(){
     var today=new Date().toDateString();
     var yest=new Date(Date.now()-86400000).toDateString();
+    var twoDays=new Date(Date.now()-2*86400000).toDateString();
     if(data.lastActivity===today) return data.streak;
     if(data.lastActivity===yest || !data.lastActivity) return data.streak+1;
+    if(data.lastActivity===twoDays && data.perks && data.perks.freezeCount>0){
+      data.perks.freezeCount--;
+      setTimeout(function(){ miniToast('🧊 Streak-Freeze eingesetzt – Serie gerettet!'); }, 400);
+      return data.streak+1;
+    }
     return 1;
   }
 
@@ -471,13 +502,12 @@
   function checkQuests(){
     if(!data.questClaims) data.questClaims={};
     var k=_today(); var claims=data.questClaims[k]||(data.questClaims[k]={});
-    var awarded=0, oldLevel=data.level;
-    questList().forEach(function(q){ if(!claims[q.id] && questDone(q)){ claims[q.id]=true; data.totalXP+=q.xp; awarded+=q.xp; } });
+    var awarded=0;
+    questList().forEach(function(q){ if(!claims[q.id] && questDone(q)){ claims[q.id]=true; awarded+=q.xp; } });
     if(awarded>0){
-      var newLevel=data.level; while(data.totalXP>=xpForLevel(newLevel+1)) newLevel++; data.level=newLevel;
-      checkAch(); save(); render();
-      if(newLevel>oldLevel) showLevelUp(newLevel);
-      try{ toast('Quest geschafft! +'+awarded+' XP'); }catch(e){}
+      var res=grantXP(awarded);
+      save(); render();
+      try{ toast('Quest geschafft! +'+res.amount+' XP'); }catch(e){}
     }
   }
   function renderQuests(){
@@ -503,6 +533,8 @@
     var sv=document.getElementById('set-version'); if(sv) sv.textContent='Version '+(window.__appVersion||'1.0');
     var la=document.getElementById('last-ach');
     if(la){ var arr=data.achievements||[]; if(arr.length){ var a=arr[arr.length-1]; la.innerHTML='<div class="cap">LETZTER ERFOLG</div><div class="ic">'+a.icon+'</div><div class="nm">'+esc(a.name)+'</div>'; la.classList.add('show'); } else { la.classList.remove('show'); la.innerHTML=''; } }
+    var sg=document.getElementById('set-gist'); if(sg) sg.value=S.iosBridgeGistId||'';
+    renderPerksBox();
     document.getElementById('smodal').classList.remove('hidden');
   }
   function closeSettings(){ document.getElementById('smodal').classList.add('hidden'); }
@@ -527,28 +559,49 @@
     var kc=parseFloat(document.getElementById('set-kcal').value); S.xpPer10Kcal=(isNaN(kc)?1:kc);
     var cp=parseInt(document.getElementById('set-cap').value); S.dailyCap=(isNaN(cp)?200:cp);
     S.streakBonus=selBonus;
+    var sg=document.getElementById('set-gist'); if(sg) S.iosBridgeGistId=sg.value.trim();
     save(); closeSettings(); render();
+    if(!isNative()){
+      var hbWeb=document.getElementById('btn-health');
+      if(hbWeb){ if(S.iosBridgeGistId) hbWeb.classList.remove('hidden'); else hbWeb.classList.add('hidden'); }
+      if(S.iosBridgeGistId) syncHealthWeb({interactive:true});
+    }
     try{ if(window.__rescheduleReminder) window.__rescheduleReminder(); }catch(e){}
   }
+  function renderPerksBox(){
+    var el=document.getElementById('perks-box'); if(!el) return;
+    var P=data.perks||{freezeCount:0,boostCharges:0};
+    var lvl=data.level||1, html='';
+    if(lvl>=8) html+='<div class="hint" style="margin:0 0 6px;text-transform:none">🧊 Streak-Freeze: <b style="color:var(--cyan)">'+P.freezeCount+'</b> verfügbar – rettet automatisch einen verpassten Tag.</div>';
+    else html+='<div class="hint" style="margin:0 0 6px">🧊 Streak-Freeze ab Level 8</div>';
+    if(lvl>=12){
+      var active=isBoostActive();
+      html+='<div class="hint" style="margin:0 0 6px;text-transform:none">🔥 Doppel-XP-Ladungen: <b style="color:var(--yellow)">'+P.boostCharges+'</b></div>';
+      html+='<div class="colors" style="grid-template-columns:1fr;margin-bottom:4px"><button class="pbtn '+(active?'ghost':'yellow')+'" '+(active||P.boostCharges<=0?'disabled':'')+' onclick="activateBoost()">'+(active?'Doppel-XP aktiv':'🔥 Doppel-XP aktivieren (24h)')+'</button></div>';
+    } else html+='<div class="hint" style="margin:0 0 6px">🔥 Doppel-XP-Tage ab Level 12</div>';
+    if(lvl>=15) html+='<div class="hint" style="text-transform:none">⚔️ Legendär-Challenge freigeschaltet.</div>';
+    el.innerHTML=html;
+  }
+  function activateBoost(){
+    if(!data.perks || data.perks.boostCharges<=0 || isBoostActive()) return;
+    data.perks.boostCharges--;
+    data.settings.xpBoostUntil=Date.now()+86400000;
+    save(); renderPerksBox();
+    miniToast('🔥 Doppel-XP für 24h aktiviert!');
+  }
+  window.activateBoost=activateBoost;
 
   function completeGoal(id){
     var goal=data.goals.find(function(g){ return g.id===id; });
     if(!goal) return;
-    var oldLevel=data.level;
     var gained=Math.round(goal.points*streakMult());
-    data.totalXP+=gained;
     data.streak=updateStreak();
     data.lastActivity=new Date().toDateString();
-    data.completions.unshift({ id:Date.now(), goalId:goal.id, goalName:goal.name, points:gained, date:new Date().toISOString() });
+    var res=grantXP(gained);
+    data.completions.unshift({ id:Date.now(), goalId:goal.id, goalName:goal.name, points:res.amount, date:new Date().toISOString() });
     data.completions=data.completions.slice(0,200);
     vibrate(30);
-
-    var newLevel=data.level;
-    while(data.totalXP>=xpForLevel(newLevel+1)) newLevel++;
-    data.level=newLevel;
-    checkAch();
     save(); render();
-    if(newLevel>oldLevel) showLevelUp(newLevel);
     checkQuests();
     try{ checkChallenge(); }catch(e){}
     try{ checkDailyChallenge(); }catch(e){}
@@ -575,13 +628,34 @@
     if(c>=100) add('c100','100 Trainings','🎖️');
     if(data.level>=3) add('l3','Level 3','⭐');
     if(data.level>=5) add('l5','Level 5','🏆');
+    if(data.level>=7) add('l7','Level 7','🔷');
     if(data.level>=10) add('l10','Level 10','👑');
+    if(data.level>=15) add('l15','Level 15','💠');
     if(data.level>=20) add('l20','Level 20','🌟');
+    if(data.level>=25) add('l25','Level 25','☄️');
+    if(data.level>=30) add('l30','Level 30','🪐');
+    if(data.level>=40) add('l40','Level 40','🌌');
     if(data.streak>=3) add('s3','3 Tage','🔥');
     if(data.streak>=7) add('s7','7 Tage','🔥');
     if(data.streak>=14) add('s14','14 Tage','🔥');
     if(data.streak>=30) add('s30','30 Tage','🔥');
     if(data.streak>=100) add('s100','100 Tage','💎');
+    ACTIVITIES.forEach(function(act){
+      if(data.completions.some(function(x){ return x.actId===act.id; })) add('act-'+act.id,act.name,act.ic);
+    });
+    var wk=(data.stats&&data.stats.weeklyClaims)||0;
+    if(wk>=1) add('wc1','Erste Wochenchallenge','🗓️');
+    if(wk>=10) add('wc10','10 Wochenchallenges','📅');
+    if(wk>=25) add('wc25','25 Wochenchallenges','🏛️');
+    var dc=(data.stats&&data.stats.dailyClaims)||0;
+    if(dc>=1) add('dc1','Erste Tagesmotivation','☀️');
+    if(dc>=10) add('dc10','10 Tagesmotivationen','🌤️');
+    if(dc>=30) add('dc30','30 Tagesmotivationen','🌞');
+    if(THEMES.every(function(t){ return themeUnlocked(t); })) add('designer','Designer','🎨');
+    if((data.companionStage||0)>=COMPANION.length-1) add('companion-max','Vollendet','🐲');
+    var totalSteps=0; for(var k in (data.healthSync||{})){ totalSteps+=(data.healthSync[k].steps||0); }
+    if(totalSteps>=100000) add('steps100k','100.000 Schritte','🚶');
+    if(totalSteps>=1000000) add('steps1m','1.000.000 Schritte','🌍');
   }
 
   function deleteGoal(id){ if(confirm('Ziel wirklich löschen?')){ data.goals=data.goals.filter(function(g){return g.id!==id;}); save(); render(); } }
@@ -740,6 +814,8 @@
   function render(){
     document.getElementById('level').textContent=data.level;
     document.getElementById('totalXP').textContent=data.totalXP;
+    var rk=document.getElementById('rank'); if(rk) rk.textContent=rankForLevel(data.level).name;
+    renderCompanion();
     document.getElementById('streak').textContent=data.streak;
     var _sm=streakMult(); var _sl=document.getElementById('streak-lbl'); if(_sl) _sl.textContent=(_sm>1?('Tage ×'+_sm):'Tage');
     renderQuests();
@@ -940,7 +1016,7 @@
 
   /* ================= Etappe 2: Wochen-Challenge ================= */
   // Sportlich-Balance: Leicht 75 / Mittel 150 / Schwer 300 XP
-  var CHAL_DIFF={ leicht:{inc:1,reward:75,tasks:3,newAct:1}, mittel:{inc:1,reward:150,tasks:4,newAct:2}, schwer:{inc:2,reward:300,tasks:5,newAct:2} };
+  var CHAL_DIFF={ leicht:{inc:1,reward:75,tasks:3,newAct:1}, mittel:{inc:1,reward:150,tasks:4,newAct:2}, schwer:{inc:2,reward:300,tasks:5,newAct:2}, legendaer:{inc:3,reward:500,tasks:6,newAct:3,minLevel:15} };
   function weekStartTs(){ return startOfWeek(new Date()).getTime(); }
   function generateChallenge(diff){
     diff=diff||(data.weeklyChallenge&&data.weeklyChallenge.difficulty)||'mittel';
@@ -972,25 +1048,25 @@
   function checkChallenge(){
     var c=data.weeklyChallenge; if(!c||c.claimed) return;
     if(challengeDone()){
-      c.claimed=true; var old=data.level; data.totalXP+=c.reward;
-      var nl=data.level; while(data.totalXP>=xpForLevel(nl+1)) nl++; data.level=nl;
+      c.claimed=true;
+      data.stats.weeklyClaims=(data.stats.weeklyClaims||0)+1;
+      var res=grantXP(c.reward);
       save(); render();
-      if(nl>old) showLevelUp(nl); else miniToast('★ Wochenchallenge geschafft: +'+c.reward+' XP!');
+      if(!res.leveledUp) miniToast('★ Wochenchallenge geschafft: +'+res.amount+' XP!');
     }
   }
   function logActivity(actId){
     var a=activityById(actId); if(!a) return;
-    var old=data.level, pts=Math.round(a.xp*streakMult());
-    data.totalXP+=pts; data.streak=updateStreak(); data.lastActivity=new Date().toDateString();
-    data.completions.unshift({ id:Date.now(), actId:actId, goalId:null, goalName:a.ic+' '+a.name, points:pts, date:new Date().toISOString() });
+    var pts=Math.round(a.xp*streakMult());
+    data.streak=updateStreak(); data.lastActivity=new Date().toDateString();
+    var res=grantXP(pts);
+    data.completions.unshift({ id:Date.now(), actId:actId, goalId:null, goalName:a.ic+' '+a.name, points:res.amount, date:new Date().toISOString() });
     data.completions=data.completions.slice(0,300);
-    var nl=data.level; while(data.totalXP>=xpForLevel(nl+1)) nl++; data.level=nl;
-    vibrate(30); checkAch(); save(); render();
-    if(nl>old) showLevelUp(nl);
+    vibrate(30); save(); render();
     checkQuests(); checkChallenge(); checkDailyChallenge();
   }
   function challengeTick(key){ var c=data.weeklyChallenge; if(!c) return; var t=c.tasks.filter(function(x){return x.key===key;})[0]; if(!t) return; if(t.kind==='goal') completeGoal(t.refId); else logActivity(t.refId); }
-  function setChallengeDiff(d){ generateChallenge(d); render(); miniToast('Challenge: '+d.charAt(0).toUpperCase()+d.slice(1)+' – Bonus '+(CHAL_DIFF[d]||CHAL_DIFF.mittel).reward+' XP'); }
+  function setChallengeDiff(d){ generateChallenge(d); render(); var lbl=d==='legendaer'?'Legendär':d.charAt(0).toUpperCase()+d.slice(1); miniToast('Challenge: '+lbl+' – Bonus '+(CHAL_DIFF[d]||CHAL_DIFF.mittel).reward+' XP'); }
   function swapChallengeTask(key){
     var c=data.weeklyChallenge; if(!c) return;
     var used=c.tasks.map(function(t){return t.refId;});
@@ -1007,8 +1083,9 @@
     ensureChallenge();
     var c=data.weeklyChallenge, el=document.getElementById('challenge'); if(!el) return;
     var doneCount=c.tasks.filter(function(t){return taskProgress(t)>=t.target;}).length;
-    var diffBtns=['leicht','mittel','schwer'].map(function(d){ return '<button class="pbtn '+(c.difficulty===d?'yellow':'ghost')+'" style="padding:4px 8px;font-size:10px" onclick="setChallengeDiff(\''+d+'\')">'+d.charAt(0).toUpperCase()+d.slice(1)+'</button>'; }).join('');
-    var html='<div class="sec-head"><div class="sec-title gold">Wochen-Challenge</div><div style="display:flex;gap:4px">'+diffBtns+'</div></div>';
+    var diffs=['leicht','mittel','schwer']; if((data.level||1)>=15) diffs.push('legendaer');
+    var diffBtns=diffs.map(function(d){ var lbl=d==='legendaer'?'Legendär':d.charAt(0).toUpperCase()+d.slice(1); return '<button class="pbtn '+(c.difficulty===d?'yellow':'ghost')+'" style="padding:4px 8px;font-size:10px" onclick="setChallengeDiff(\''+d+'\')">'+lbl+'</button>'; }).join('');
+    var html='<div class="sec-head" style="flex-wrap:wrap;row-gap:6px"><div class="sec-title gold">Wochen-Challenge</div><div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end">'+diffBtns+'</div></div>';
     html+='<div class="panel" style="border-color:var(--yellow)">';
     html+='<div class="bar-info"><span>'+doneCount+'/'+c.tasks.length+' Aufgaben</span><span style="color:var(--yellow)">Bonus '+c.reward+' XP'+(c.claimed?' ✓':'')+'</span></div>';
     c.tasks.forEach(function(t){
@@ -1051,10 +1128,11 @@
   function checkDailyChallenge(){
     var d=data.dailyChallenge; if(!d||!d.accepted||d.claimed) return;
     if(dailyProgress()>=d.target){
-      d.claimed=true; var old=data.level; data.totalXP+=d.reward;
-      var nl=data.level; while(data.totalXP>=xpForLevel(nl+1)) nl++; data.level=nl;
+      d.claimed=true;
+      data.stats.dailyClaims=(data.stats.dailyClaims||0)+1;
+      var res=grantXP(d.reward);
       save(); render();
-      if(nl>old) showLevelUp(nl); else miniToast('★ Tages-Challenge geschafft: +'+d.reward+' XP!');
+      if(!res.leveledUp) miniToast('★ Tages-Challenge geschafft: +'+res.amount+' XP!');
     }
   }
   function acceptDaily(){ var d=data.dailyChallenge; if(!d) return; d.accepted=true; d.declined=false; save(); render(); checkDailyChallenge(); miniToast('Angenommen: '+d.name+' → '+d.reward+' XP'); }
@@ -1077,6 +1155,128 @@
     html+='</div>';
     el.innerHTML=html;
   }
+
+  /* ---- Geteilte XP-Vergabe (Android nativ + iOS/Web-PWA) ---- */
+  window.toast=function(msg){
+    var t=document.createElement('div');
+    t.textContent=msg;
+    t.style.cssText='position:fixed;left:14px;right:14px;bottom:16px;z-index:90;background:var(--panel);color:var(--text);border:3px solid var(--cyan);box-shadow:4px 4px 0 #000;padding:12px 14px;font-size:12px;text-align:center;text-transform:uppercase;letter-spacing:1px;';
+    document.body.appendChild(t);
+    setTimeout(function(){ t.remove(); }, 3400);
+  };
+  function toKcal(e){ var v=(e&&e.value)||0, u=e&&e.unit; if(u==='calories') return v/1000; if(u==='joules') return v/4184; if(u==='kilojoules') return v/4.184; return v; }
+  // Gruppiert nach Datenquelle. Samsung Health fusioniert Handy+Watch bereits -> ist maßgeblich.
+  // Sonst größte Einzelquelle statt Summe, um Doppelzählung über mehrere Quellen zu vermeiden.
+  function sumByOrigin(records, valFn){
+    records=records||[]; var by={};
+    records.forEach(function(r){ var o=(r.metadata&&r.metadata.dataOrigin)||'?'; by[o]=(by[o]||0)+(valFn(r)||0); });
+    var total;
+    if(by['com.sec.android.app.shealth']!=null){ total=by['com.sec.android.app.shealth']; }
+    else { total=0; for(var k in by){ if(by[k]>total) total=by[k]; } }
+    return { total:Math.round(total), origins:by };
+  }
+
+  function isBoostActive(){ return !!(data.settings && data.settings.xpBoostUntil && Date.now()<data.settings.xpBoostUntil); }
+  // Einziger Ort, der totalXP erhöht und Level-up-Folgen (Erfolge, Perks, Begleiter, Banner) auslöst.
+  function grantXP(amount){
+    if(isBoostActive()) amount=Math.round(amount*2);
+    var old=data.level;
+    data.totalXP+=amount;
+    var nl=data.level; while(data.totalXP>=xpForLevel(nl+1)) nl++;
+    data.level=nl;
+    if(nl>old){
+      for(var lv=old+1; lv<=nl; lv++){
+        if(lv>=8 && data.perks.freezeCount<3) data.perks.freezeCount++;
+        if(lv>=12 && lv%5===0 && data.perks.boostCharges<2) data.perks.boostCharges++;
+      }
+      checkCompanionEvolution(nl);
+    }
+    checkAch();
+    if(nl>old) showLevelUp(nl);
+    return { amount:amount, leveledUp:nl>old };
+  }
+
+  function applyHealthXP(steps, kcal, interactive, originsNote){
+    if(!data.healthSync) data.healthSync={};
+    var dayKey=new Date().toDateString();
+    var S=data.settings||{};
+    var stepsXP=Math.floor(steps/100)*((S.xpPer100Steps!=null)?S.xpPer100Steps:1);
+    var kcalXP=Math.floor(kcal/10)*((S.xpPer10Kcal!=null)?S.xpPer10Kcal:1);
+    var target=Math.min(stepsXP+kcalXP,(S.dailyCap!=null)?S.dailyCap:200);
+    var prev=data.healthSync[dayKey]||{baseTarget:0};
+    var delta=target-(prev.baseTarget||0);
+    data.healthSync[dayKey]={ steps:steps, kcal:kcal, baseTarget:Math.max(target, prev.baseTarget||0) };
+    if(delta>0){
+      data.streak=updateStreak();
+      data.lastActivity=new Date().toDateString();
+      var res=grantXP(delta);
+      var hid='health-'+dayKey;
+      var nm='Aktivität: '+steps+' Schritte'+(kcal>0?(' · '+kcal+' kcal'):'');
+      var existing=data.completions.find(function(c){ return c.healthId===hid; });
+      if(existing){ existing.points=(existing.points||0)+res.amount; existing.goalName=nm; existing.date=new Date().toISOString(); }
+      else { data.completions.unshift({ id:Date.now(), healthId:hid, goalId:null, goalName:nm, points:res.amount, date:new Date().toISOString() }); }
+      save(); render();
+      if(interactive) toast(steps+' Schritte'+(kcal>0?(', '+kcal+' kcal'):'')+' → +'+res.amount+' XP'+(originsNote||''));
+    } else {
+      save();
+      if(interactive) toast('Schon aktuell: '+steps+' Schritte'+(kcal>0?(', '+kcal+' kcal'):'')+' heute'+(originsNote||''));
+    }
+    checkQuests();
+    try{ checkDailyChallenge(); }catch(e){}
+  }
+
+  /* ---- Titel/Rang, rein aus dem Level abgeleitet ---- */
+  var RANKS=[
+    {lvl:1,name:'Neuling'},{lvl:3,name:'Einsteiger'},{lvl:5,name:'Kämpfer'},
+    {lvl:10,name:'Krieger'},{lvl:15,name:'Veteran'},{lvl:20,name:'Champion'},
+    {lvl:25,name:'Meister'},{lvl:30,name:'Legende'},{lvl:40,name:'Unaufhaltsam'}
+  ];
+  function rankForLevel(l){ var cur=RANKS[0]; RANKS.forEach(function(r){ if(l>=r.lvl) cur=r; }); return cur; }
+
+  /* ---- Wachsender Begleiter (an dieselben Level-Gates wie THEMES gekoppelt) ---- */
+  var COMPANION=[
+    {lvl:1,  name:'Funke',          emoji:'✨', flavor:'Ein winziger Funke Motivation – der Anfang von allem.'},
+    {lvl:5,  name:'Keim',           emoji:'🌱', flavor:'Er wächst! Dranbleiben lohnt sich schon jetzt.'},
+    {lvl:10, name:'Sprössling',     emoji:'🐣', flavor:'Aus dem Funken ist etwas Lebendiges geworden.'},
+    {lvl:15, name:'Kämpfer-Form',   emoji:'🐲', flavor:'Er kämpft jetzt an deiner Seite mit.'},
+    {lvl:20, name:'Erwacht',        emoji:'🦁', flavor:'Voll erwacht – stark, wach, unaufhaltsam.'},
+    {lvl:25, name:'Legendäre Form', emoji:'🐉', flavor:'Die legendäre Form. Genau wie du.'}
+  ];
+  function companionStageIdx(){ var idx=0; COMPANION.forEach(function(s,i){ if((data.level||1)>=s.lvl) idx=i; }); return idx; }
+  function renderCompanion(){
+    var el=document.getElementById('companion'); if(!el) return;
+    var idx=companionStageIdx(), s=COMPANION[idx];
+    el.innerHTML='<div class="comp-box stage'+idx+'" onclick="companionFlavor()"><div class="comp-em">'+s.emoji+'</div></div><div class="comp-name">'+esc(s.name)+'</div>';
+  }
+  function companionFlavor(){ var s=COMPANION[companionStageIdx()]; miniToast(s.emoji+' '+s.name+' — '+s.flavor); }
+  window.companionFlavor=companionFlavor;
+  function checkCompanionEvolution(level){
+    var idx=companionStageIdx();
+    if(idx>(data.companionStage||0)){
+      data.companionStage=idx; save();
+      var s=COMPANION[idx];
+      setTimeout(function(){ miniToast('✨ Dein Begleiter entwickelt sich: '+s.name); }, 3200);
+    }
+  }
+
+  /* ---- iPhone-Bridge: Schritte/kcal aus der Health-App via secret Gist + iOS-Kurzbefehl ---- */
+  window.syncHealthWeb=function(opts){
+    opts=opts||{};
+    var id=data.settings&&data.settings.iosBridgeGistId;
+    if(!id){ if(opts.interactive) alert('Bitte zuerst deine Gist-ID im Menü unter „📱 iPhone-Bridge" eintragen.'); return Promise.resolve(); }
+    return fetch('https://api.github.com/gists/'+encodeURIComponent(id))
+      .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+      .then(function(g){
+        var f=g.files&&g.files['steps.json'];
+        if(!f||!f.content) throw new Error('steps.json fehlt im Gist');
+        var payload=JSON.parse(f.content);
+        var todayYMD=new Date().toISOString().slice(0,10);
+        if(payload.date!==todayYMD){ if(opts.interactive) toast('Bridge: noch keine heutigen Daten (letzter Stand '+payload.date+')'); return; }
+        applyHealthXP(payload.steps||0, payload.kcal||0, opts.interactive, ' (iPhone)');
+      })
+      .catch(function(e){ if(opts.interactive) toast('iPhone-Bridge Fehler: '+((e&&e.message)||e)); });
+  };
+  window.doHealthSync=function(opts){ if(isNative()) return window.syncHealth(opts); return window.syncHealthWeb(opts); };
 
   /* ---- Native (Capacitor) Anpassungen ---- */
   function isNative(){ return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()); }
@@ -1140,56 +1340,7 @@
       P.LocalNotifications.requestPermissions().then(function(){ scheduleReminder(); }).catch(function(){ scheduleReminder(); });
     }
     /* ---- Phase 2: Auto-XP aus Health Connect (Watch -> Samsung Health -> Health Connect) ---- */
-    window.toast=function(msg){
-      var t=document.createElement('div');
-      t.textContent=msg;
-      t.style.cssText='position:fixed;left:14px;right:14px;bottom:16px;z-index:90;background:var(--panel);color:var(--text);border:3px solid var(--cyan);box-shadow:4px 4px 0 #000;padding:12px 14px;font-size:12px;text-align:center;text-transform:uppercase;letter-spacing:1px;';
-      document.body.appendChild(t);
-      setTimeout(function(){ t.remove(); }, 3400);
-    }
-    function toKcal(e){ var v=(e&&e.value)||0, u=e&&e.unit; if(u==='calories') return v/1000; if(u==='joules') return v/4184; if(u==='kilojoules') return v/4.184; return v; }
     function shortOrigin(pkg){ if(!pkg) return '?'; if(pkg.indexOf('shealth')>=0) return 'Samsung'; if(pkg.indexOf('healthdata')>=0) return 'HealthConnect'; if(pkg.indexOf('fit')>=0||pkg.indexOf('gms')>=0) return 'GoogleFit'; if(pkg.indexOf('fitbit')>=0) return 'Fitbit'; var p=pkg.split('.'); return p[p.length-1]; }
-    // Gruppiert nach Datenquelle. Samsung Health fusioniert Handy+Watch bereits -> ist maßgeblich.
-    // Sonst größte Einzelquelle statt Summe, um Doppelzählung über mehrere Quellen zu vermeiden.
-    function sumByOrigin(records, valFn){
-      records=records||[]; var by={};
-      records.forEach(function(r){ var o=(r.metadata&&r.metadata.dataOrigin)||'?'; by[o]=(by[o]||0)+(valFn(r)||0); });
-      var total;
-      if(by['com.sec.android.app.shealth']!=null){ total=by['com.sec.android.app.shealth']; }
-      else { total=0; for(var k in by){ if(by[k]>total) total=by[k]; } }
-      return { total:Math.round(total), origins:by };
-    }
-    function applyHealthXP(steps, kcal, interactive, originsNote){
-      if(!data.healthSync) data.healthSync={};
-      var dayKey=new Date().toDateString();
-      var S=data.settings||{};
-      var stepsXP=Math.floor(steps/100)*((S.xpPer100Steps!=null)?S.xpPer100Steps:1);
-      var kcalXP=Math.floor(kcal/10)*((S.xpPer10Kcal!=null)?S.xpPer10Kcal:1);
-      var target=Math.min(stepsXP+kcalXP,(S.dailyCap!=null)?S.dailyCap:200);
-      var prev=data.healthSync[dayKey]||{awardedXP:0};
-      var delta=target-(prev.awardedXP||0);
-      data.healthSync[dayKey]={ steps:steps, kcal:kcal, awardedXP:Math.max(target, prev.awardedXP||0) };
-      if(delta>0){
-        var oldLevel=data.level;
-        data.totalXP+=delta;
-        data.streak=updateStreak();
-        data.lastActivity=new Date().toDateString();
-        var hid='health-'+dayKey;
-        var nm='Aktivität: '+steps+' Schritte'+(kcal>0?(' · '+kcal+' kcal'):'');
-        var existing=data.completions.find(function(c){ return c.healthId===hid; });
-        if(existing){ existing.points=target; existing.goalName=nm; existing.date=new Date().toISOString(); }
-        else { data.completions.unshift({ id:Date.now(), healthId:hid, goalId:null, goalName:nm, points:target, date:new Date().toISOString() }); }
-        var newLevel=data.level; while(data.totalXP>=xpForLevel(newLevel+1)) newLevel++; data.level=newLevel;
-        checkAch(); save(); render();
-        if(newLevel>oldLevel) showLevelUp(newLevel);
-        if(interactive) toast(steps+' Schritte'+(kcal>0?(', '+kcal+' kcal'):'')+' → +'+delta+' XP'+(originsNote||''));
-      } else {
-        save();
-        if(interactive) toast('Schon aktuell: '+steps+' Schritte'+(kcal>0?(', '+kcal+' kcal'):'')+' heute'+(originsNote||''));
-      }
-      checkQuests();
-      try{ checkDailyChallenge(); }catch(e){}
-    }
     window.syncHealth=async function(opts){
       opts=opts||{};
       if(!P.HealthConnect){ if(opts.interactive) alert('Health Connect ist in diesem Build nicht verfügbar.'); return; }
@@ -1318,6 +1469,13 @@
 
   if('serviceWorker' in navigator && !isNative()){
     window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+  }
+
+  if(!isNative()){
+    var hbWeb=document.getElementById('btn-health');
+    if(hbWeb && data.settings && data.settings.iosBridgeGistId) hbWeb.classList.remove('hidden');
+    setTimeout(function(){ syncHealthWeb({interactive:false}); }, 0);
+    document.addEventListener('visibilitychange', function(){ if(!document.hidden) syncHealthWeb({interactive:false}); });
   }
 </script>
 </body>
