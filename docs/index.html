@@ -164,11 +164,12 @@
   .hidden{ display:none !important; }
 
   .companion{ text-align:center; margin:0 0 14px; }
-  .comp-box{ display:inline-flex; align-items:center; justify-content:center; width:56px; height:56px; background:var(--screen); border:4px solid var(--cyan); box-shadow:4px 4px 0 #000; cursor:pointer; transition:transform .15s; }
+  .comp-box{ display:inline-flex; align-items:center; justify-content:center; padding:10px; background:var(--screen); border:4px solid var(--cyan); box-shadow:4px 4px 0 #000; cursor:pointer; transition:transform .15s; }
   .comp-box:active{ transform:scale(.94); }
-  .comp-em{ font-size:26px; line-height:1; }
+  .pxl{ display:grid; gap:1px; }
+  .pxl i{ display:block; }
   .comp-box.stage3,.comp-box.stage4,.comp-box.stage5{ border-color:var(--yellow); box-shadow:4px 4px 0 #000,0 0 12px var(--yellow); }
-  .comp-box.stage3 .comp-em,.comp-box.stage4 .comp-em,.comp-box.stage5 .comp-em{ animation:complow 1.6s ease-in-out infinite; }
+  .comp-box.stage3 .pxl,.comp-box.stage4 .pxl,.comp-box.stage5 .pxl{ animation:complow 1.6s ease-in-out infinite; }
   @keyframes complow{ 0%,100%{ filter:drop-shadow(0 0 2px var(--yellow)); } 50%{ filter:drop-shadow(0 0 8px var(--yellow)); } }
   .comp-name{ margin-top:6px; font-size:11px; letter-spacing:2px; color:var(--dim); }
   .lvl-rank{ font-size:11px; letter-spacing:2px; color:var(--yellow); margin-top:2px; }
@@ -296,7 +297,8 @@
     <label>Ab Level</label>
     <input type="number" id="r-level" value="5" min="1">
     <label>Belohnung</label>
-    <input type="text" id="r-text" placeholder="z.B. Neues Trainings-Shirt">
+    <input type="text" id="r-text" maxlength="40" placeholder="z.B. Neues Trainings-Shirt">
+    <div class="hint" style="margin:0 0 10px">Kurz &amp; knapp – was genau bekommst du dir? (max. 40 Zeichen)</div>
     <div class="modal-actions">
       <button class="pbtn green" style="flex:1" onclick="saveReward()">Speichern</button>
       <button class="pbtn ghost" onclick="closeReward()">Abbruch</button>
@@ -326,8 +328,12 @@
     <input type="file" id="importFile" accept="application/json,.json" class="hidden" onchange="importData(event)">
 
     <div class="sec-title cyan" style="font-size:13px;margin:12px 0 6px">📱 iPhone-Bridge</div>
-    <div class="hint" style="margin:0 0 8px">Verbindet Health-App-Daten (inkl. Apple Watch/Strava) über einen iOS-Kurzbefehl. Gist-ID hier eintragen, sobald der Kurzbefehl eingerichtet ist.</div>
+    <div class="hint" style="margin:0 0 8px;text-transform:none">Verbindet Health-App-Daten (inkl. Apple Watch/Strava) über einen iOS-Kurzbefehl. Gist-ID hier eintragen, sobald der Kurzbefehl eingerichtet ist.</div>
     <input type="text" id="set-gist" placeholder="Secret-Gist-ID">
+    <div class="colors" style="grid-template-columns:1fr;margin:8px 0 4px">
+      <button class="pbtn cyan" onclick="testBridge()">🔌 Verbindung testen</button>
+    </div>
+    <div class="hint" id="bridge-status" style="text-transform:none;min-height:14px"></div>
 
     <div class="sec-title green" style="font-size:13px;margin:2px 0 6px">XP &amp; Belohnungen</div>
     <label>XP je 100 Schritte</label>
@@ -349,14 +355,20 @@
     <div class="sec-title" style="font-size:13px;margin:12px 0 6px">Erinnerungen</div>
     <label>Tägliche Erinnerung – Uhrzeit (0–23)</label>
     <input type="number" id="set-hour" min="0" max="23" value="19">
+    <label style="margin-top:10px">Benachrichtigungen von Khaos</label>
+    <div class="colors" style="grid-template-columns:1fr 1fr;margin-bottom:4px">
+      <button class="pbtn green" id="set-notif-on" onclick="selNotif=true;renderNotifBtns()">AN</button>
+      <button class="pbtn ghost" id="set-notif-off" onclick="selNotif=false;renderNotifBtns()">AUS</button>
+    </div>
 
     <div class="sec-title" style="color:var(--purple);font-size:13px;margin:12px 0 6px">Anpassen</div>
     <div class="colors" style="grid-template-columns:1fr 1fr;margin-bottom:8px">
       <button class="pbtn cyan" onclick="closeSettings();openActivities()">Aktivitäten</button>
       <button class="pbtn" style="background:var(--purple)" onclick="closeSettings();openThemes()">Farbdarstellung</button>
     </div>
-    <div class="colors" style="grid-template-columns:1fr;margin-bottom:8px">
-      <button class="pbtn yellow" onclick="openAchievements()">🏆 Erfolge ansehen</button>
+    <div class="colors" style="grid-template-columns:1fr 1fr;margin-bottom:8px">
+      <button class="pbtn yellow" onclick="openAchievements()">🏆 Erfolge</button>
+      <button class="pbtn" style="background:var(--purple)" onclick="closeSettings();openCompanionInfo()">👾 Khaos ansehen</button>
     </div>
 
     <div class="sec-title" style="color:var(--pink);font-size:13px;margin:12px 0 6px">Feedback</div>
@@ -384,11 +396,29 @@
   </div>
 </div>
 
+<!-- Begleiter-Info -->
+<div class="overlay hidden" id="cmodal" onclick="if(event.target===this)closeCompanionInfo()">
+  <div class="modal" style="border-color:var(--purple)">
+    <h3 style="color:var(--purple)">Dein Begleiter</h3>
+    <div style="text-align:center;margin-bottom:10px">
+      <div id="comp-info-sprite" style="display:inline-flex;padding:10px;background:var(--screen);border:4px solid var(--purple);box-shadow:4px 4px 0 #000"></div>
+      <div id="comp-info-name" style="margin-top:8px;font-weight:bold;letter-spacing:2px"></div>
+    </div>
+    <div class="hint" id="comp-info-flavor" style="text-transform:none;margin-bottom:10px"></div>
+    <div class="hint" style="text-transform:none;margin-bottom:10px">Khaos wächst automatisch mit deinem Level. Ab bestimmten Leveln kannst du sein Aussehen wechseln – dein Fortschritt bleibt dabei immer erhalten.</div>
+    <div class="sec-title" style="color:var(--purple);font-size:13px;margin:8px 0 6px">Aussehen wählen</div>
+    <div id="skin-picker"></div>
+    <div class="modal-actions" style="margin-top:12px">
+      <button class="pbtn ghost" style="flex:1" onclick="closeCompanionInfo()">Schließen</button>
+    </div>
+  </div>
+</div>
+
 <!-- Aktivitäten-Fragebogen -->
 <div class="overlay hidden" id="amodal" onclick="if(event.target===this)closeActivities()">
   <div class="modal" style="border-color:var(--cyan)">
     <h3 style="color:var(--cyan)">Deine Aktivitäten</h3>
-    <div class="hint">Was kannst/willst du machen? Alles ohne Fitnessstudio. Deine Auswahl speist die Wochenchallenge.</div>
+    <div class="hint" style="text-transform:none">Eine <b>optionale Ergänzung</b> zu deinen eigenen Zielen oben – nicht entscheidend für deinen Fortschritt, sondern zusätzliche Ideen. Deine Auswahl speist nur die Wochenchallenge mit mehr Abwechslung. Tippe eine Kategorie an, um die Aktivitäten darin zu sehen.</div>
     <div id="act-checklist"></div>
     <div class="modal-actions" style="margin-top:12px">
       <button class="pbtn cyan" style="flex:1" onclick="saveActivities()">Speichern</button>
@@ -461,6 +491,9 @@
     if(S.streakBonus==null) S.streakBonus=true;
     if(S.iosBridgeGistId==null) S.iosBridgeGistId='';
     if(S.xpBoostUntil==null) S.xpBoostUntil=0;
+    if(S.notificationsEnabled==null) S.notificationsEnabled=true;
+    if(data.companionSkin==null) data.companionSkin='khaos';
+    if(!data.unlockedCompanionSkins) data.unlockedCompanionSkins=['khaos'];
     if(!data.questClaims) data.questClaims={};
     if(!data.perks) data.perks={freezeCount:0,boostCharges:0};
     if(!data.stats) data.stats={weeklyClaims:0,dailyClaims:0};
@@ -523,6 +556,8 @@
   }
   var selBonus=true;
   function renderBonusBtns(){ var on=document.getElementById('set-bonus-on'), off=document.getElementById('set-bonus-off'); if(!on||!off) return; on.className='pbtn '+(selBonus?'green':'ghost'); off.className='pbtn '+(selBonus?'ghost':'red'); }
+  var selNotif=true;
+  function renderNotifBtns(){ var on=document.getElementById('set-notif-on'), off=document.getElementById('set-notif-off'); if(!on||!off) return; on.className='pbtn '+(selNotif?'green':'ghost'); off.className='pbtn '+(selNotif?'ghost':'red'); }
   function openSettings(){
     var S=data.settings||{};
     document.getElementById('set-hour').value=(S.reminderHour!=null?S.reminderHour:19);
@@ -530,10 +565,12 @@
     document.getElementById('set-kcal').value=(S.xpPer10Kcal!=null?S.xpPer10Kcal:1);
     document.getElementById('set-cap').value=(S.dailyCap!=null?S.dailyCap:200);
     selBonus=(S.streakBonus!==false); renderBonusBtns();
+    selNotif=(S.notificationsEnabled!==false); renderNotifBtns();
     var sv=document.getElementById('set-version'); if(sv) sv.textContent='Version '+(window.__appVersion||'1.0');
     var la=document.getElementById('last-ach');
     if(la){ var arr=data.achievements||[]; if(arr.length){ var a=arr[arr.length-1]; la.innerHTML='<div class="cap">LETZTER ERFOLG</div><div class="ic">'+a.icon+'</div><div class="nm">'+esc(a.name)+'</div>'; la.classList.add('show'); } else { la.classList.remove('show'); la.innerHTML=''; } }
     var sg=document.getElementById('set-gist'); if(sg) sg.value=S.iosBridgeGistId||'';
+    var bs=document.getElementById('bridge-status'); if(bs) bs.innerHTML='';
     renderPerksBox();
     document.getElementById('smodal').classList.remove('hidden');
   }
@@ -559,6 +596,7 @@
     var kc=parseFloat(document.getElementById('set-kcal').value); S.xpPer10Kcal=(isNaN(kc)?1:kc);
     var cp=parseInt(document.getElementById('set-cap').value); S.dailyCap=(isNaN(cp)?200:cp);
     S.streakBonus=selBonus;
+    S.notificationsEnabled=selNotif;
     var sg=document.getElementById('set-gist'); if(sg) S.iosBridgeGistId=sg.value.trim();
     save(); closeSettings(); render();
     if(!isNative()){
@@ -567,6 +605,7 @@
       if(S.iosBridgeGistId) syncHealthWeb({interactive:true});
     }
     try{ if(window.__rescheduleReminder) window.__rescheduleReminder(); }catch(e){}
+    try{ if(window.__rescheduleDailyNotif) window.__rescheduleDailyNotif(); }catch(e){}
   }
   function renderPerksBox(){
     var el=document.getElementById('perks-box'); if(!el) return;
@@ -898,22 +937,45 @@
   }
 
   /* ================= Etappe 1: Aktivitäten, Tipps, Themes ================= */
+  var ACTIVITY_CATEGORIES=[
+    {id:'cardio',        name:'Ausdauer',                    ic:'🏃'},
+    {id:'kraft',         name:'Kraft',                       ic:'💪'},
+    {id:'beweglichkeit', name:'Beweglichkeit &amp; Entspannung', ic:'🧘'},
+    {id:'alltag',        name:'Alltag',                      ic:'🧹'},
+    {id:'spiel',         name:'Sport &amp; Spiel',           ic:'⚽'},
+    {id:'sonstiges',     name:'Sonstiges',                   ic:'🎯'}
+  ];
   var ACTIVITIES=[
-    {id:'walk',    name:'Spazieren',      ic:'🚶', xp:10, tip:'Zählt automatisch über deine Schritte. 30 Min. flott gehen ≈ 3.000 Schritte.'},
-    {id:'run',     name:'Laufen',         ic:'🏃', xp:25, tip:'Einfach vor der Haustür loslaufen – 20–30 Min. reichen für den Einstieg.'},
-    {id:'bike',    name:'Radfahren',      ic:'🚴', xp:25, tip:'Kurze Alltagswege mit dem Rad statt Auto – Training ohne extra Zeit.'},
-    {id:'swim',    name:'Schwimmen',      ic:'🏊', xp:30, tip:'Gelenkschonend & ganzkörperlich. Freibad/See im Sommer, Halle im Winter.'},
-    {id:'hike',    name:'Wandern',        ic:'🥾', xp:30, tip:'Naturrunde am Wochenende – Ausdauer und Kopf frei zugleich.'},
-    {id:'rope',    name:'Seilspringen',   ic:'🪢', xp:20, tip:'5–10 Min. = intensives Cardio, braucht nur 2 m² Platz.'},
-    {id:'stairs',  name:'Treppensteigen', ic:'🪜', xp:15, tip:'Aufzug meiden – jede Etage zählt. Perfekt im Alltag/Büro.'},
-    {id:'pushups', name:'Liegestütze',    ic:'💪', xp:15, tip:'Kein Gerät nötig. Auch auf Knien möglich – Hauptsache regelmäßig.'},
-    {id:'squats',  name:'Kniebeugen',     ic:'🦵', xp:15, tip:'Beine & Po ohne Gewichte. Starte mit 3×15.'},
-    {id:'yoga',    name:'Yoga / Dehnen',  ic:'🧘', xp:15, tip:'Beweglichkeit & Entspannung – Video-Anleitungen reichen völlig.'},
-    {id:'dance',   name:'Tanzen',         ic:'💃', xp:20, tip:'Lieblingsmusik an – 3 Songs durchtanzen ist schon Cardio.'},
-    {id:'home',    name:'Hausarbeit',     ic:'🧹', xp:10, tip:'Putzen, Garten, Einkäufe tragen – Bewegung, die eh anfällt.'},
-    {id:'ball',    name:'Ballsport',      ic:'⚽', xp:25, tip:'Fußball/Basketball mit Freunden – Spaß plus Bewegung.'}
+    {id:'walk',    name:'Spazieren',      ic:'🚶', xp:10, cat:'cardio', tip:'Zählt automatisch über deine Schritte. 30 Min. flott gehen ≈ 3.000 Schritte.'},
+    {id:'run',     name:'Laufen',         ic:'🏃', xp:25, cat:'cardio', tip:'Einfach vor der Haustür loslaufen – 20–30 Min. reichen für den Einstieg.'},
+    {id:'bike',    name:'Radfahren',      ic:'🚴', xp:25, cat:'cardio', tip:'Kurze Alltagswege mit dem Rad statt Auto – Training ohne extra Zeit.'},
+    {id:'swim',    name:'Schwimmen',      ic:'🏊', xp:30, cat:'cardio', tip:'Gelenkschonend & ganzkörperlich. Freibad/See im Sommer, Halle im Winter.'},
+    {id:'hike',    name:'Wandern',        ic:'🥾', xp:30, cat:'cardio', tip:'Naturrunde am Wochenende – Ausdauer und Kopf frei zugleich.'},
+    {id:'rope',    name:'Seilspringen',   ic:'🪢', xp:20, cat:'cardio', tip:'5–10 Min. = intensives Cardio, braucht nur 2 m² Platz.'},
+    {id:'rowing',  name:'Rudern',         ic:'🚣', xp:25, cat:'cardio', tip:'Rudergerät oder Boot – schont die Gelenke, fordert den ganzen Körper.'},
+    {id:'skate',   name:'Inliner / Skaten', ic:'⛸️', xp:20, cat:'cardio', tip:'Cardio mit Spaßfaktor – auch ein Skatepark-Besuch zählt.'},
+    {id:'climb',   name:'Klettern',       ic:'🧗', xp:30, cat:'cardio', tip:'Kletterhalle oder Fels – Kraft, Ausdauer und Kopf in einem.'},
+    {id:'ski',     name:'Ski / Snowboard', ic:'⛷️', xp:30, cat:'cardio', tip:'Wintersport-Tag im Schnee – volle Beinarbeit.'},
+    {id:'pushups', name:'Liegestütze',    ic:'💪', xp:15, cat:'kraft', tip:'Kein Gerät nötig. Auch auf Knien möglich – Hauptsache regelmäßig.'},
+    {id:'squats',  name:'Kniebeugen',     ic:'🦵', xp:15, cat:'kraft', tip:'Beine & Po ohne Gewichte. Starte mit 3×15.'},
+    {id:'pullups', name:'Klimmzüge',      ic:'🏋️', xp:20, cat:'kraft', tip:'Klimmzugstange reicht – notfalls mit Band-Unterstützung starten.'},
+    {id:'plank',   name:'Unterarmstütz',  ic:'🧍', xp:15, cat:'kraft', tip:'Rumpf stabil halten – schon 30–60 Sek. wirken.'},
+    {id:'gym',     name:'Krafttraining',  ic:'🏋️‍♀️', xp:25, cat:'kraft', tip:'Studio oder Hantelset zuhause – Grundübungen reichen völlig.'},
+    {id:'yoga',    name:'Yoga / Dehnen',  ic:'🧘', xp:15, cat:'beweglichkeit', tip:'Beweglichkeit & Entspannung – Video-Anleitungen reichen völlig.'},
+    {id:'pilates', name:'Pilates',        ic:'🤸', xp:15, cat:'beweglichkeit', tip:'Rumpfkraft & Haltung – auch als kurzes Home-Workout.'},
+    {id:'meditation', name:'Meditation / Atmen', ic:'🧘‍♂️', xp:10, cat:'beweglichkeit', tip:'5–10 Min. bewusst atmen – Erholung zählt auch zum Fortschritt.'},
+    {id:'stairs',  name:'Treppensteigen', ic:'🪜', xp:15, cat:'alltag', tip:'Aufzug meiden – jede Etage zählt. Perfekt im Alltag/Büro.'},
+    {id:'home',    name:'Hausarbeit',     ic:'🧹', xp:10, cat:'alltag', tip:'Putzen, Garten, Einkäufe tragen – Bewegung, die eh anfällt.'},
+    {id:'dog',     name:'Gassi gehen',    ic:'🐕', xp:10, cat:'alltag', tip:'Der Hund freut sich – und du bewegst dich nebenbei mit.'},
+    {id:'dance',   name:'Tanzen',         ic:'💃', xp:20, cat:'spiel', tip:'Lieblingsmusik an – 3 Songs durchtanzen ist schon Cardio.'},
+    {id:'ball',    name:'Ballsport',      ic:'⚽', xp:25, cat:'spiel', tip:'Fußball/Basketball mit Freunden – Spaß plus Bewegung.'},
+    {id:'boxing',  name:'Boxen',          ic:'🥊', xp:25, cat:'spiel', tip:'Boxsack oder Kurs – Stress abbauen und fit werden zugleich.'},
+    {id:'tennis',  name:'Tischtennis',    ic:'🏓', xp:15, cat:'spiel', tip:'Schnelle Reflexe, viel Spaß – auch als kurze Runde zwischendurch.'},
+    {id:'hiit',    name:'Zirkeltraining / HIIT', ic:'🔥', xp:25, cat:'sonstiges', tip:'Kurze, intensive Intervalle – 15–20 Min. reichen.'},
+    {id:'other',   name:'Sonstige Bewegung', ic:'🎯', xp:10, cat:'sonstiges', tip:'Passt nichts genau? Trag es trotzdem ein – Hauptsache in Bewegung.'}
   ];
   function activityById(id){ return ACTIVITIES.filter(function(a){return a.id===id;})[0]; }
+  function categoryById(id){ return ACTIVITY_CATEGORIES.filter(function(c){return c.id===id;})[0]; }
 
   var THEMES=[
     {id:'terminal',name:'Terminal Grün', lvl:1,  vars:{screen:'#0d1f12',panel:'#13301c',line:'#1f4a2c',text:'#d7f5d0',dim:'#6f9c78',cyan:'#2ce8f5',pink:'#ff5fa2',yellow:'#ffd93b',green:'#3ddc84',purple:'#b388ff',orange:'#ff8c42',bg:'#11160f'}},
@@ -951,11 +1013,31 @@
     save();
   }
 
-  /* ---- Aktivitäten-Fragebogen ---- */
+  /* ---- Aktivitäten-Fragebogen (zweistufig: Kategorie -> Aktivitäten) ---- */
   var selActivities=[];
+  var openCategory=null;
+  function catCount(catId){ return ACTIVITIES.filter(function(a){return a.cat===catId && selActivities.indexOf(a.id)>=0;}).length; }
   function renderActivityChecklist(){
     var c=document.getElementById('act-checklist'); if(!c) return; c.innerHTML='';
-    ACTIVITIES.forEach(function(a){
+    if(!openCategory){
+      ACTIVITY_CATEGORIES.forEach(function(cat){
+        var total=ACTIVITIES.filter(function(a){return a.cat===cat.id;}).length;
+        var sel=catCount(cat.id);
+        var d=document.createElement('div'); d.className='reward'; d.style.cssText='opacity:1;cursor:pointer;border-color:'+(sel>0?'var(--green)':'var(--line)');
+        d.innerHTML='<div><div class="rt">'+cat.ic+' '+cat.name+'</div></div><div class="rstate" style="color:'+(sel>0?'var(--green)':'var(--dim)')+'">'+(sel>0?(sel+'/'+total):(total+' Optionen'))+' ›</div>';
+        d.onclick=function(){ openCategory=cat.id; renderActivityChecklist(); };
+        c.appendChild(d);
+      });
+      return;
+    }
+    var cat=categoryById(openCategory);
+    var back=document.createElement('div'); back.className='pbtn ghost'; back.style.cssText='margin-bottom:10px;text-align:center';
+    back.textContent='← Zurück zu den Kategorien';
+    back.onclick=function(){ openCategory=null; renderActivityChecklist(); };
+    c.appendChild(back);
+    var head=document.createElement('div'); head.className='sec-title cyan'; head.style.marginBottom='8px'; head.textContent=cat.ic+' '+cat.name;
+    c.appendChild(head);
+    ACTIVITIES.filter(function(a){return a.cat===openCategory;}).forEach(function(a){
       var on=selActivities.indexOf(a.id)>=0;
       var d=document.createElement('div'); d.className='reward'; d.style.cssText='opacity:1;cursor:pointer;border-color:'+(on?'var(--green)':'var(--line)');
       d.innerHTML='<div><div class="rt">'+a.ic+' '+a.name+'</div></div><div class="rstate" style="color:'+(on?'var(--green)':'var(--dim)')+'">'+(on?'✓':'○')+'</div>';
@@ -963,7 +1045,7 @@
       c.appendChild(d);
     });
   }
-  function openActivities(){ selActivities=(data.activities||[]).slice(); renderActivityChecklist(); document.getElementById('amodal').classList.remove('hidden'); }
+  function openActivities(){ selActivities=(data.activities||[]).slice(); openCategory=null; renderActivityChecklist(); document.getElementById('amodal').classList.remove('hidden'); }
   function closeActivities(){ document.getElementById('amodal').classList.add('hidden'); }
   function saveActivities(){ data.activities=selActivities.slice(); data.onboarded=true; save(); closeActivities(); miniToast('Aktivitäten gespeichert: '+data.activities.length); }
   window.openActivities=openActivities; window.closeActivities=closeActivities; window.saveActivities=saveActivities;
@@ -1019,7 +1101,7 @@
   var CHAL_DIFF={ leicht:{inc:1,reward:75,tasks:3,newAct:1}, mittel:{inc:1,reward:150,tasks:4,newAct:2}, schwer:{inc:2,reward:300,tasks:5,newAct:2}, legendaer:{inc:3,reward:500,tasks:6,newAct:3,minLevel:15} };
   function weekStartTs(){ return startOfWeek(new Date()).getTime(); }
   function generateChallenge(diff){
-    diff=diff||(data.weeklyChallenge&&data.weeklyChallenge.difficulty)||'mittel';
+    diff=diff||(data.weeklyChallenge&&data.weeklyChallenge.difficulty)||'leicht';
     var cfg=CHAL_DIFF[diff]||CHAL_DIFF.mittel;
     var tasks=[], used=[];
     (data.goals||[]).forEach(function(g){
@@ -1190,6 +1272,7 @@
         if(lv>=12 && lv%5===0 && data.perks.boostCharges<2) data.perks.boostCharges++;
       }
       checkCompanionEvolution(nl);
+      checkCompanionSkinUnlocks(nl);
     }
     checkAch();
     if(nl>old) showLevelUp(nl);
@@ -1233,50 +1316,144 @@
   ];
   function rankForLevel(l){ var cur=RANKS[0]; RANKS.forEach(function(r){ if(l>=r.lvl) cur=r; }); return cur; }
 
-  /* ---- Wachsender Begleiter (an dieselben Level-Gates wie THEMES gekoppelt) ---- */
+  /* ---- Wachsender Begleiter "Khaos" (Wachstum an dieselben Level-Gates wie THEMES gekoppelt) ---- */
+  // Pixelraster: b=Körper, h=Horn/Deko, e=Auge, .=leer. Gleiche Form für alle Wachstumsstufen,
+  // damit erkennbar derselbe Charakter bleibt - nur Größe/Glow ändert sich mit dem Level.
+  var COMPANION_ROWS=[
+    "..h...h..",
+    "..bbbbb..",
+    ".bbbbbbb.",
+    "bbbbbbbbb",
+    "bbebbbebb",
+    "bbbbbbbbb",
+    ".bbbbbbb.",
+    "..b...b..",
+    "........."
+  ];
+  var COMPANION_ROWS_BOW=[ // Khaosia: Schleife statt Hörnchen als Extra-Detail
+    "...hhh...",
+    "..bbbbb..",
+    ".bbbbbbb.",
+    "bbbbbbbbb",
+    "bbebbbebb",
+    "bbbbbbbbb",
+    ".bbbbbbb.",
+    "..b...b..",
+    "........."
+  ];
+  var COMPANION_SKINS=[
+    {id:'khaos',   name:'Khaos',      unlockLvl:1,  rows:COMPANION_ROWS,    colors:{b:'var(--purple)', h:'var(--pink)', e:'var(--yellow)'}},
+    {id:'khaosia', name:'Khaosia',    unlockLvl:10, rows:COMPANION_ROWS_BOW,colors:{b:'#ff9fd6',        h:'#ff5fa2',      e:'var(--yellow)'}},
+    {id:'frost',   name:'Frostkhaos', unlockLvl:15, rows:COMPANION_ROWS,    colors:{b:'var(--cyan)',    h:'#e8fbff',      e:'#0b2530'}},
+    {id:'ember',   name:'Flammkhaos', unlockLvl:20, rows:COMPANION_ROWS,    colors:{b:'var(--orange)',  h:'#ffe08a',      e:'#3a1400'}}
+  ];
+  function skinById(id){ return COMPANION_SKINS.filter(function(s){return s.id===id;})[0]||COMPANION_SKINS[0]; }
   var COMPANION=[
-    {lvl:1,  name:'Funke',          emoji:'✨', flavor:'Ein winziger Funke Motivation – der Anfang von allem.'},
-    {lvl:5,  name:'Keim',           emoji:'🌱', flavor:'Er wächst! Dranbleiben lohnt sich schon jetzt.'},
-    {lvl:10, name:'Sprössling',     emoji:'🐣', flavor:'Aus dem Funken ist etwas Lebendiges geworden.'},
-    {lvl:15, name:'Kämpfer-Form',   emoji:'🐲', flavor:'Er kämpft jetzt an deiner Seite mit.'},
-    {lvl:20, name:'Erwacht',        emoji:'🦁', flavor:'Voll erwacht – stark, wach, unaufhaltsam.'},
-    {lvl:25, name:'Legendäre Form', emoji:'🐉', flavor:'Die legendäre Form. Genau wie du.'}
+    {lvl:1,  name:'Winzling', cell:4,  flavor:'Khaos ist gerade erst geschlüpft – klein, aber neugierig.'},
+    {lvl:5,  name:'Wächst',   cell:5,  flavor:'Er wächst! Dranbleiben lohnt sich schon jetzt.'},
+    {lvl:10, name:'Kräftig',  cell:6,  flavor:'Khaos wird kräftiger – man sieht deinen Fortschritt.'},
+    {lvl:15, name:'Stark',    cell:7,  flavor:'Stark und treu an deiner Seite.'},
+    {lvl:20, name:'Mächtig',  cell:8,  flavor:'Mächtig und wach – genau wie du.'},
+    {lvl:25, name:'Episch',   cell:10, flavor:'Die epische Form. Genau wie du.'}
   ];
   function companionStageIdx(){ var idx=0; COMPANION.forEach(function(s,i){ if((data.level||1)>=s.lvl) idx=i; }); return idx; }
+  function pixelSprite(rows, colors, cell){
+    var w=rows[0].length, html='<div class="pxl" style="grid-template-columns:repeat('+w+',1fr);width:'+(w*cell)+'px;height:'+(rows.length*cell)+'px">';
+    rows.forEach(function(row){
+      for(var i=0;i<row.length;i++){
+        var ch=row[i], col=(ch==='b')?colors.b:(ch==='h')?colors.h:(ch==='e')?colors.e:'transparent';
+        html+='<i style="background:'+col+'"></i>';
+      }
+    });
+    return html+'</div>';
+  }
   function renderCompanion(){
     var el=document.getElementById('companion'); if(!el) return;
-    var idx=companionStageIdx(), s=COMPANION[idx];
-    el.innerHTML='<div class="comp-box stage'+idx+'" onclick="companionFlavor()"><div class="comp-em">'+s.emoji+'</div></div><div class="comp-name">'+esc(s.name)+'</div>';
+    var idx=companionStageIdx(), stage=COMPANION[idx], skin=skinById(data.companionSkin);
+    el.innerHTML='<div class="comp-box stage'+idx+'" onclick="openCompanionInfo()">'+pixelSprite(skin.rows,skin.colors,stage.cell)+'</div><div class="comp-name">'+esc(skin.name)+' · '+esc(stage.name)+'</div>';
   }
-  function companionFlavor(){ var s=COMPANION[companionStageIdx()]; miniToast(s.emoji+' '+s.name+' — '+s.flavor); }
-  window.companionFlavor=companionFlavor;
   function checkCompanionEvolution(level){
     var idx=companionStageIdx();
     if(idx>(data.companionStage||0)){
       data.companionStage=idx; save();
       var s=COMPANION[idx];
-      setTimeout(function(){ miniToast('✨ Dein Begleiter entwickelt sich: '+s.name); }, 3200);
+      setTimeout(function(){ miniToast('✨ Khaos wächst weiter: '+s.name); }, 3200);
     }
   }
+  function checkCompanionSkinUnlocks(level){
+    if(!data.unlockedCompanionSkins) data.unlockedCompanionSkins=['khaos'];
+    COMPANION_SKINS.forEach(function(s){
+      if(s.unlockLvl>1 && level>=s.unlockLvl && data.unlockedCompanionSkins.indexOf(s.id)<0){
+        data.unlockedCompanionSkins.push(s.id);
+        (function(name){ setTimeout(function(){ miniToast('✨ Neuer Look frei: '+name+' – tippe auf Khaos zum Wechseln'); }, 4000); })(s.name);
+      }
+    });
+    save();
+  }
+  function renderSkinPicker(){
+    var el=document.getElementById('skin-picker'); if(!el) return; el.innerHTML='';
+    COMPANION_SKINS.forEach(function(s){
+      var unlocked=(data.unlockedCompanionSkins||['khaos']).indexOf(s.id)>=0;
+      var active=data.companionSkin===s.id;
+      var d=document.createElement('div'); d.className='reward';
+      d.style.cssText='opacity:'+(unlocked?1:.55)+';cursor:'+(unlocked?'pointer':'default')+';border-color:'+(active?'var(--green)':'var(--line)');
+      d.innerHTML='<div><div class="rt">'+esc(s.name)+'</div></div><div class="rstate" style="color:'+(active?'var(--green)':'var(--dim)')+'">'+(active?'✓ AKTIV':(unlocked?'WÄHLEN':('🔒 Lvl '+s.unlockLvl)))+'</div>';
+      if(unlocked) d.onclick=function(id){ return function(){ data.companionSkin=id; save(); renderCompanion(); openCompanionInfo(); }; }(s.id);
+      el.appendChild(d);
+    });
+  }
+  function openCompanionInfo(){
+    var idx=companionStageIdx(), stage=COMPANION[idx], skin=skinById(data.companionSkin);
+    var sp=document.getElementById('comp-info-sprite'); if(sp) sp.innerHTML=pixelSprite(skin.rows,skin.colors,8);
+    var nm=document.getElementById('comp-info-name'); if(nm) nm.textContent=skin.name+' · '+stage.name;
+    var fl=document.getElementById('comp-info-flavor'); if(fl) fl.textContent=stage.flavor;
+    renderSkinPicker();
+    document.getElementById('cmodal').classList.remove('hidden');
+  }
+  function closeCompanionInfo(){ document.getElementById('cmodal').classList.add('hidden'); }
+  window.openCompanionInfo=openCompanionInfo; window.closeCompanionInfo=closeCompanionInfo;
 
   /* ---- iPhone-Bridge: Schritte/kcal aus der Health-App via secret Gist + iOS-Kurzbefehl ---- */
-  window.syncHealthWeb=function(opts){
-    opts=opts||{};
-    var id=data.settings&&data.settings.iosBridgeGistId;
-    if(!id){ if(opts.interactive) alert('Bitte zuerst deine Gist-ID im Menü unter „📱 iPhone-Bridge" eintragen.'); return Promise.resolve(); }
+  function fetchBridgePayload(id){
     return fetch('https://api.github.com/gists/'+encodeURIComponent(id))
       .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
       .then(function(g){
         var f=g.files&&g.files['steps.json'];
         if(!f||!f.content) throw new Error('steps.json fehlt im Gist');
-        var payload=JSON.parse(f.content);
-        var todayYMD=new Date().toISOString().slice(0,10);
+        return JSON.parse(f.content);
+      });
+  }
+  window.syncHealthWeb=function(opts){
+    opts=opts||{};
+    var id=data.settings&&data.settings.iosBridgeGistId;
+    if(!id){ if(opts.interactive) alert('Bitte zuerst deine Gist-ID im Menü unter „📱 iPhone-Bridge" eintragen.'); return Promise.resolve(); }
+    var todayYMD=new Date().toISOString().slice(0,10);
+    return fetchBridgePayload(id)
+      .then(function(payload){
         if(payload.date!==todayYMD){ if(opts.interactive) toast('Bridge: noch keine heutigen Daten (letzter Stand '+payload.date+')'); return; }
         applyHealthXP(payload.steps||0, payload.kcal||0, opts.interactive, ' (iPhone)');
       })
       .catch(function(e){ if(opts.interactive) toast('iPhone-Bridge Fehler: '+((e&&e.message)||e)); });
   };
   window.doHealthSync=function(opts){ if(isNative()) return window.syncHealth(opts); return window.syncHealthWeb(opts); };
+  window.testBridge=function(){
+    var el=document.getElementById('bridge-status');
+    var id=(document.getElementById('set-gist')||{}).value;
+    id=(id||'').trim();
+    if(!id){ if(el) el.innerHTML='<span style="color:var(--pink)">❌ Bitte zuerst eine Gist-ID eintragen.</span>'; return; }
+    if(el) el.innerHTML='<span style="color:var(--dim)">Prüfe Verbindung …</span>';
+    var todayYMD=new Date().toISOString().slice(0,10);
+    fetchBridgePayload(id).then(function(payload){
+      if(!el) return;
+      if(payload.date===todayYMD){
+        el.innerHTML='<span style="color:var(--green)">✅ Verbunden! Khaos hat heute schon '+(payload.steps||0)+' Schritte gefunden.</span>';
+      } else {
+        el.innerHTML='<span style="color:var(--yellow)">⚠️ Verbindung klappt, aber noch keine Daten von heute (Stand '+esc(payload.date||'?')+'). Kurzbefehl einmal in der Shortcuts-App manuell ausführen.</span>';
+      }
+    }).catch(function(){
+      if(el) el.innerHTML='<span style="color:var(--pink)">❌ Kann den Gist nicht finden – Gist-ID nochmal prüfen.</span>';
+    });
+  };
 
   /* ---- Native (Capacitor) Anpassungen ---- */
   function isNative(){ return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()); }
@@ -1299,17 +1476,18 @@
     var REMINDER_ID=1001, REMINDER_HOUR=19; // täglich 19:00, sofern heute noch nicht trainiert
     function scheduleReminder(){
       if(!P.LocalNotifications) return;
+      if(data.settings && data.settings.notificationsEnabled===false){ P.LocalNotifications.cancel({ notifications:[{ id:REMINDER_ID }] }).catch(function(){}); return; }
       var now=new Date();
       var hr=(data.settings&&data.settings.reminderHour!=null)?data.settings.reminderHour:19;
       var trainedToday=data.completions.some(function(c){ return new Date(c.date).toDateString()===now.toDateString(); });
       var target=new Date(); target.setHours(hr,0,0,0);
       if(trainedToday || now>=target){ target.setDate(target.getDate()+1); target.setHours(hr,0,0,0); }
       var body = data.streak>0
-        ? ('Streak: '+data.streak+' Tage 🔥 – heute dranbleiben und XP sichern!')
-        : 'Zeit fürs Training! Hol dir deine XP 💪';
+        ? ('Deine Serie steht bei '+data.streak+' Tagen 🔥 – lass uns die heute nicht abreißen lassen!')
+        : 'Hey, hier ist Khaos – Zeit für ein bisschen Bewegung? Ich wachse mit jedem XP mit 💪';
       P.LocalNotifications.cancel({ notifications:[{ id:REMINDER_ID }] }).catch(function(){}).then(function(){
         return P.LocalNotifications.schedule({ notifications:[{
-          id:REMINDER_ID, title:'RespecYou', body:body,
+          id:REMINDER_ID, title:'🐲 Khaos meldet sich', body:body,
           schedule:{ at:target, allowWhileIdle:true }
         }]});
       }).catch(function(){});
@@ -1318,6 +1496,7 @@
     var DAILY_NOTIF_ID=1002, DAILY_NOTIF_HOUR=9;
     function scheduleDailyChallengeNotif(){
       if(!P.LocalNotifications) return;
+      if(data.settings && data.settings.notificationsEnabled===false){ P.LocalNotifications.cancel({ notifications:[{ id:DAILY_NOTIF_ID }] }).catch(function(){}); return; }
       try{ ensureDailyChallenge(); }catch(e){ return; }
       var d=data.dailyChallenge; if(!d || d.notified || d.accepted || d.declined) return;
       var now=new Date(), target=new Date(); target.setHours(DAILY_NOTIF_HOUR,0,0,0);
@@ -1325,8 +1504,8 @@
       d.notified=true; save();
       P.LocalNotifications.cancel({ notifications:[{ id:DAILY_NOTIF_ID }] }).catch(function(){}).then(function(){
         return P.LocalNotifications.schedule({ notifications:[{
-          id:DAILY_NOTIF_ID, title:'★ Tages-Challenge',
-          body:d.name+' → '+d.reward+' XP. Zum Annehmen App öffnen!',
+          id:DAILY_NOTIF_ID, title:'🐲 Khaos hat eine Idee für heute',
+          body:'"'+d.name+'" → '+d.reward+' XP für uns beide. Komm in die App, wenn du dabei bist!',
           schedule:{ at:target, allowWhileIdle:true }
         }]});
       }).catch(function(){});
@@ -1335,6 +1514,7 @@
     var _completeGoal=window.completeGoal;
     window.completeGoal=function(id){ _completeGoal(id); scheduleReminder(); };
     window.__rescheduleReminder=scheduleReminder;
+    window.__rescheduleDailyNotif=scheduleDailyChallengeNotif;
     // Bei App-Start und jedem Wiedereintritt aktualisieren
     if(P.LocalNotifications && P.LocalNotifications.requestPermissions){
       P.LocalNotifications.requestPermissions().then(function(){ scheduleReminder(); }).catch(function(){ scheduleReminder(); });
