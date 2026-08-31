@@ -1319,43 +1319,42 @@
   /* ---- Wachsender Begleiter "Khaos" (Wachstum an dieselben Level-Gates wie THEMES gekoppelt) ---- */
   // Pixelraster: b=Körper, h=Horn/Deko, e=Auge, .=leer. Gleiche Form für alle Wachstumsstufen,
   // damit erkennbar derselbe Charakter bleibt - nur Größe/Glow ändert sich mit dem Level.
-  var COMPANION_ROWS=[
-    "..h...h..",
-    "..bbbbb..",
-    ".bbbbbbb.",
-    "bbbbbbbbb",
-    "bbebbbebb",
-    "bbbbbbbbb",
-    ".bbbbbbb.",
-    "..b...b..",
-    "........."
-  ];
-  var COMPANION_ROWS_BOW=[ // Khaosia: Schleife statt Hörnchen als Extra-Detail
-    "...hhh...",
-    "..bbbbb..",
-    ".bbbbbbb.",
-    "bbbbbbbbb",
-    "bbebbbebb",
-    "bbbbbbbbb",
-    ".bbbbbbb.",
-    "..b...b..",
-    "........."
+  // Jede Wachstumsstufe hat eine EIGENE Form (schlanker, Arme/Beine, größere Hörner) statt nur
+  // Größe zu ändern. `rows` = Standard-Hörner, `bowRows` = Khaosia-Variante (Schleife statt Hörner),
+  // beide pro Stufe gleich breit/hoch, damit das Pixelraster nicht verrutscht.
+  var COMPANION=[
+    {lvl:1,  name:'Winzling', cell:4, flavor:'Khaos ist gerade erst geschlüpft – klein, aber neugierig.',
+      rows:[ "..h...h..","..bbbbb..",".bbbbbbb.","bbbbbbbbb","bbebbbebb","bbbbbbbbb",".bbbbbbb.","..b...b..","........." ],
+      bowRows:[ "...hhh...","..bbbbb..",".bbbbbbb.","bbbbbbbbb","bbebbbebb","bbbbbbbbb",".bbbbbbb.","..b...b..","........." ]
+    },
+    {lvl:10, name:'Wächst', cell:5, flavor:'Er bekommt Arme und Beine – die Reise beginnt.',
+      rows:[ ".hh.....hh.","...bbbbb...","..bbbbbbb..",".bbbbbbbbb.","b.bebbbeb.b","bbbbbbbbbbb",".bbbbbbbbb.","..b.....b..","..........." ],
+      bowRows:[ "..hhhhhhh..","...bbbbb...","..bbbbbbb..",".bbbbbbbbb.","b.bebbbeb.b","bbbbbbbbbbb",".bbbbbbbbb.","..b.....b..","..........." ]
+    },
+    {lvl:20, name:'Kräftig', cell:6, flavor:'Kräftiger und schlanker – man sieht deinen Fortschritt.',
+      rows:[ ".hh.......hh.","....bbbbb....","...bbbbbbb...","..bbbbbbbbb..","bbbbbbbbbbbbb","bbbebbbbbebbb","bbbbbbbbbbbbb",".bbbbbbbbbbb.","..bb.....bb..","............." ],
+      bowRows:[ "...hhhhhhh...","....bbbbb....","...bbbbbbb...","..bbbbbbbbb..","bbbbbbbbbbbbb","bbbebbbbbebbb","bbbbbbbbbbbbb",".bbbbbbbbbbb.","..bb.....bb..","............." ]
+    },
+    {lvl:30, name:'Stark', cell:7, flavor:'Die Hörner werden sichtbar cooler. Stark und treu an deiner Seite.',
+      rows:[ ".hhh.....hhh.","....bbbbb....","...bbbbbbb...","..bbbbbbbbb..","bbbbbbbbbbbbb","bbbebbbbbebbb","bbbbbbbbbbbbb",".bbbbbbbbbbb.","..bb.....bb..","............." ],
+      bowRows:[ "..hhhhhhhhh..","....bbbbb....","...bbbbbbb...","..bbbbbbbbb..","bbbbbbbbbbbbb","bbbebbbbbebbb","bbbbbbbbbbbbb",".bbbbbbbbbbb.","..bb.....bb..","............." ]
+    },
+    {lvl:40, name:'Mächtig', cell:8, flavor:'Mächtig, mit imposanten Hörnern – kaum wiederzuerkennen.',
+      rows:[ ".h.........h.",".hhh.....hhh.","....bbbbb....","...bbbbbbb...","..bbbbbbbbb..","bbbbbbbbbbbbb","bbbebbbbbebbb","bbbbbbbbbbbbb",".bbbbbbbbbbb.","..bb.....bb..","............." ],
+      bowRows:[ "....hhh......","..hhhhhhhhh..","....bbbbb....","...bbbbbbb...","..bbbbbbbbb..","bbbbbbbbbbbbb","bbbebbbbbebbb","bbbbbbbbbbbbb",".bbbbbbbbbbb.","..bb.....bb..","............." ]
+    },
+    {lvl:50, name:'Kampfbestie', cell:10, flavor:'Die Kampfbestie ist erwacht. Genau wie du.',
+      rows:[ "..h.......h..","hhh.......hhh","....bbbbb....","...bbbbbbb...","..bbbbbbbbb..","bbbbbbbbbbbbb","bbbebbbbbebbb","bbbbbbbbbbbbb",".bbbbbbbbbbb.","bb.........bb","............." ],
+      bowRows:[ "....hhh......","hhhhhhhhhhhhh","....bbbbb....","...bbbbbbb...","..bbbbbbbbb..","bbbbbbbbbbbbb","bbbebbbbbebbb","bbbbbbbbbbbbb",".bbbbbbbbbbb.","bb.........bb","............." ]
+    }
   ];
   var COMPANION_SKINS=[
-    {id:'khaos',   name:'Khaos',      unlockLvl:1,  rows:COMPANION_ROWS,    colors:{b:'var(--purple)', h:'var(--pink)', e:'var(--yellow)'}},
-    {id:'khaosia', name:'Khaosia',    unlockLvl:10, rows:COMPANION_ROWS_BOW,colors:{b:'#ff9fd6',        h:'#ff5fa2',      e:'var(--yellow)'}},
-    {id:'frost',   name:'Frostkhaos', unlockLvl:15, rows:COMPANION_ROWS,    colors:{b:'var(--cyan)',    h:'#e8fbff',      e:'#0b2530'}},
-    {id:'ember',   name:'Flammkhaos', unlockLvl:20, rows:COMPANION_ROWS,    colors:{b:'var(--orange)',  h:'#ffe08a',      e:'#3a1400'}}
+    {id:'khaos',   name:'Khaos',      unlockLvl:1,  bow:false, colors:{b:'var(--purple)', h:'var(--pink)', e:'var(--yellow)'}},
+    {id:'khaosia', name:'Khaosia',    unlockLvl:10, bow:true,  colors:{b:'#ff9fd6',        h:'#ff5fa2',      e:'var(--yellow)'}},
+    {id:'frost',   name:'Frostkhaos', unlockLvl:15, bow:false, colors:{b:'var(--cyan)',    h:'#e8fbff',      e:'#0b2530'}},
+    {id:'ember',   name:'Flammkhaos', unlockLvl:20, bow:false, colors:{b:'var(--orange)',  h:'#ffe08a',      e:'#3a1400'}}
   ];
   function skinById(id){ return COMPANION_SKINS.filter(function(s){return s.id===id;})[0]||COMPANION_SKINS[0]; }
-  var COMPANION=[
-    {lvl:1,  name:'Winzling', cell:4,  flavor:'Khaos ist gerade erst geschlüpft – klein, aber neugierig.'},
-    {lvl:5,  name:'Wächst',   cell:5,  flavor:'Er wächst! Dranbleiben lohnt sich schon jetzt.'},
-    {lvl:10, name:'Kräftig',  cell:6,  flavor:'Khaos wird kräftiger – man sieht deinen Fortschritt.'},
-    {lvl:15, name:'Stark',    cell:7,  flavor:'Stark und treu an deiner Seite.'},
-    {lvl:20, name:'Mächtig',  cell:8,  flavor:'Mächtig und wach – genau wie du.'},
-    {lvl:25, name:'Episch',   cell:10, flavor:'Die epische Form. Genau wie du.'}
-  ];
   function companionStageIdx(){ var idx=0; COMPANION.forEach(function(s,i){ if((data.level||1)>=s.lvl) idx=i; }); return idx; }
   function pixelSprite(rows, colors, cell){
     var w=rows[0].length, html='<div class="pxl" style="grid-template-columns:repeat('+w+',1fr);width:'+(w*cell)+'px;height:'+(rows.length*cell)+'px">';
@@ -1367,10 +1366,11 @@
     });
     return html+'</div>';
   }
+  function companionRows(stage, skin){ return skin.bow ? stage.bowRows : stage.rows; }
   function renderCompanion(){
     var el=document.getElementById('companion'); if(!el) return;
     var idx=companionStageIdx(), stage=COMPANION[idx], skin=skinById(data.companionSkin);
-    el.innerHTML='<div class="comp-box stage'+idx+'" onclick="openCompanionInfo()">'+pixelSprite(skin.rows,skin.colors,stage.cell)+'</div><div class="comp-name">'+esc(skin.name)+' · '+esc(stage.name)+'</div>';
+    el.innerHTML='<div class="comp-box stage'+idx+'" onclick="openCompanionInfo()">'+pixelSprite(companionRows(stage,skin),skin.colors,stage.cell)+'</div><div class="comp-name">'+esc(skin.name)+' · '+esc(stage.name)+'</div>';
   }
   function checkCompanionEvolution(level){
     var idx=companionStageIdx();
@@ -1404,7 +1404,7 @@
   }
   function openCompanionInfo(){
     var idx=companionStageIdx(), stage=COMPANION[idx], skin=skinById(data.companionSkin);
-    var sp=document.getElementById('comp-info-sprite'); if(sp) sp.innerHTML=pixelSprite(skin.rows,skin.colors,8);
+    var sp=document.getElementById('comp-info-sprite'); if(sp) sp.innerHTML=pixelSprite(companionRows(stage,skin),skin.colors,8);
     var nm=document.getElementById('comp-info-name'); if(nm) nm.textContent=skin.name+' · '+stage.name;
     var fl=document.getElementById('comp-info-flavor'); if(fl) fl.textContent=stage.flavor;
     renderSkinPicker();
