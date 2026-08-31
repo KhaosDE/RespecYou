@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>RespecYou</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d1f12">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RespecYou">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png">
+<link rel="apple-touch-icon" sizes="167x167" href="icons/icon-167.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<style>
+  :root{
+    --screen:#0d1f12; --panel:#13301c; --line:#1f4a2c;
+    --text:#d7f5d0; --dim:#6f9c78;
+    --cyan:#2ce8f5; --pink:#ff5fa2; --yellow:#ffd93b;
+    --green:#3ddc84; --purple:#b388ff; --orange:#ff8c42;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; font-family:'Courier New',monospace; }
+  body{
+    background:#11160f; color:var(--text); padding:14px 14px 80px;
+    text-transform:uppercase; letter-spacing:1px;
+  }
+  /* scanlines */
+  body::after{
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:100;
+    background:repeating-linear-gradient(rgba(0,0,0,0) 0 2px, rgba(0,0,0,.10) 2px 3px);
+  }
+  .wrap{ max-width:560px; margin:0 auto; }
+
+  .device{
+    background:var(--screen);
+    border:5px solid #1c1c1c;
+    border-radius:6px 6px 26px 6px;
+    box-shadow:0 6px 0 #000, inset 0 0 0 3px #2a2a2a, inset 0 0 30px rgba(0,0,0,.6);
+    padding:16px;
+  }
+
+  @font-face{ font-family:'PixelArcade'; src:url('assets/fonts/PressStart2P-Regular.ttf') format('truetype'); font-display:swap; }
+  @font-face{ font-family:'Terminalw'; src:url('assets/fonts/VT323-Regular.ttf') format('truetype'); font-display:swap; }
+  .logo-wrap{ background:var(--screen); border:4px solid var(--green); border-radius:6px; box-shadow:6px 6px 0 #000; padding:18px 14px 15px; margin:2px 0 14px; overflow:hidden; }
+  .logo-cmd{ font-family:'PixelArcade',monospace; font-size:clamp(15px,5vw,28px); line-height:1; letter-spacing:2px; white-space:nowrap; display:flex; align-items:center; justify-content:center; gap:10px; text-transform:none; }
+  .logo-cmd .p{ color:var(--green); }
+  .logo-cmd .a{ color:var(--yellow); text-shadow:0 0 9px rgba(255,217,59,.55); }
+  .logo-cmd .b{ color:var(--cyan); text-shadow:0 0 9px rgba(44,232,245,.55); }
+  .logo-arrow{ width:0; height:0; border-left:0.4em solid transparent; border-right:0.4em solid transparent; border-bottom:0.7em solid var(--pink); filter:drop-shadow(0 0 6px rgba(255,95,162,.75)); animation:lvlbob 1.1s ease-in-out infinite; }
+  @keyframes lvlbob{ 0%,100%{ transform:translateY(0); opacity:1; } 50%{ transform:translateY(-3px); opacity:.65; } }
+  .logo-xp{ display:flex; gap:3px; justify-content:center; margin:13px auto 0; max-width:340px; }
+  .logo-xp i{ display:block; flex:1; height:13px; background:#08140d; border:2px solid #000; }
+  .logo-xp i.on{ background:var(--cyan); }
+  .logo-xp i.lead{ background:#b8faff; animation:xplead .85s steps(2,end) infinite; }
+  @keyframes xplead{ 0%,50%{ background:#b8faff; } 51%,100%{ background:var(--cyan); } }
+  .logo-sub{ font-family:'Terminalw',monospace; text-align:center; color:var(--dim); font-size:15px; letter-spacing:3px; margin-top:9px; }
+  .last-ach{ display:none; text-align:center; border:3px solid var(--yellow); background:var(--screen); box-shadow:4px 4px 0 #000; padding:12px 10px; margin:0 0 16px; }
+  .last-ach.show{ display:block; }
+  .last-ach .cap{ font-size:9px; color:var(--dim); letter-spacing:3px; margin-bottom:6px; }
+  .last-ach .ic{ font-size:36px; line-height:1; }
+  .last-ach .nm{ font-weight:bold; color:var(--yellow); font-size:12px; margin-top:6px; }
+
+  .topbar{ display:flex; gap:6px; justify-content:center; margin-bottom:18px; flex-wrap:wrap; }
+
+  /* chunky pixel button base */
+  .pbtn{
+    border:3px solid #000; border-radius:0; font-weight:bold; color:#000;
+    box-shadow:3px 3px 0 #000; padding:8px 12px; font-size:12px; cursor:pointer;
+    text-transform:uppercase; letter-spacing:1px;
+  }
+  .pbtn:active{ transform:translate(3px,3px); box-shadow:0 0 0 #000; }
+  .pbtn.ghost{ background:var(--panel); color:var(--text); border-color:var(--line); box-shadow:3px 3px 0 #000; }
+  .pbtn.cyan{ background:var(--cyan); } .pbtn.pink{ background:var(--pink); }
+  .pbtn.green{ background:var(--green); } .pbtn.yellow{ background:var(--yellow); }
+  .pbtn.blue{ background:#5ec8ff; } .pbtn.red{ background:#ff5b5b; }
+
+  .panel{ background:var(--panel); border:3px solid var(--line); padding:14px; margin-bottom:16px; box-shadow:4px 4px 0 #000; }
+
+  .row{ display:flex; justify-content:space-between; align-items:center; }
+  .lvl{ font-size:24px; font-weight:bold; color:var(--yellow); text-shadow:2px 2px 0 #000; }
+  .lvl-sub{ font-size:11px; color:var(--dim); }
+  .streak-box{ background:var(--screen); border:3px solid var(--orange); padding:6px 12px; text-align:center; box-shadow:2px 2px 0 #000; }
+  .streak-num{ font-size:20px; font-weight:bold; color:var(--orange); }
+  .streak-lbl{ font-size:9px; color:var(--dim); }
+
+  .bar-info{ display:flex; justify-content:space-between; font-size:11px; color:var(--dim); margin:14px 0 6px; }
+  .bar-bg{ height:18px; background:var(--screen); border:3px solid #000; overflow:hidden; }
+  .bar-fill{ height:100%; background:repeating-linear-gradient(90deg,var(--cyan) 0 8px,#1fb6c4 8px 10px); transition:width .5s steps(12); }
+
+  .stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px; }
+  .stat{ border:3px solid #000; padding:12px 6px; text-align:center; box-shadow:3px 3px 0 #000; }
+  .stat .n{ font-size:20px; font-weight:bold; } .stat .l{ font-size:9px; }
+  .stat.p{ background:var(--purple); color:#000; } .stat.g{ background:var(--green); color:#000; } .stat.y{ background:var(--yellow); color:#000; }
+
+  .sec-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+  .sec-title{ font-size:15px; font-weight:bold; color:var(--cyan); text-shadow:2px 2px 0 #000; }
+  .sec-title.pink{ color:var(--pink); } .sec-title.gold{ color:var(--yellow); } .sec-title.green{ color:var(--green); }
+
+  .empty{ text-align:center; padding:30px 10px; border:3px dashed var(--line); color:var(--dim); font-size:12px; }
+
+  .goal{ background:var(--screen); border:3px solid; padding:12px; margin-bottom:10px; box-shadow:3px 3px 0 #000; }
+  .goal h3{ font-size:14px; } .goal .pts{ font-size:11px; color:var(--dim); margin-top:2px; }
+  .goal-actions{ display:flex; gap:6px; }
+  .week{ margin-top:10px; }
+  .week-info{ display:flex; justify-content:space-between; font-size:10px; color:var(--dim); margin-bottom:3px; }
+  .week-bg{ height:9px; background:#000; overflow:hidden; }
+  .week-fill{ height:100%; transition:width .4s steps(8); }
+
+  /* charts */
+  .chart{ display:flex; align-items:flex-end; gap:5px; height:110px; padding-top:6px; }
+  .col{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; }
+  .barv{ width:100%; min-height:3px; border:2px solid #000; }
+  .col .val{ font-size:9px; color:var(--text); margin-bottom:2px; }
+  .col .lbl{ font-size:9px; color:var(--dim); margin-top:4px; }
+
+  .heat-head{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:4px; }
+  .heat-head span{ text-align:center; font-size:9px; color:var(--dim); }
+  .heat{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+  .cell{ aspect-ratio:1; border:2px solid #000; }
+  .cell.today{ outline:2px solid var(--yellow); outline-offset:-2px; }
+
+  .act-list{ background:var(--screen); border:3px solid var(--pink); padding:12px; max-height:220px; overflow-y:auto; box-shadow:3px 3px 0 #000; }
+  .act{ display:flex; justify-content:space-between; padding:6px 0; border-bottom:2px solid var(--line); }
+  .act:last-child{ border-bottom:none; }
+  .act .name{ font-weight:bold; font-size:12px; } .act .date{ font-size:9px; color:var(--dim); } .act .xp{ color:var(--green); font-weight:bold; font-size:12px; }
+
+  .ach-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+  .ach{ background:var(--screen); border:3px solid var(--yellow); padding:12px; text-align:center; box-shadow:3px 3px 0 #000; }
+  .ach .ic{ font-size:28px; margin-bottom:4px; } .ach .nm{ font-weight:bold; color:var(--yellow); font-size:11px; }
+
+  .quest{ background:var(--screen); border:3px solid var(--line); padding:10px 12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; box-shadow:3px 3px 0 #000; font-size:12px; }
+  .quest.done{ border-color:var(--green); }
+  .quest .q-x{ color:var(--yellow); font-weight:bold; }
+  .quest.done .q-x{ color:var(--green); }
+
+  .reward{ background:var(--screen); border:3px solid; padding:10px 12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; box-shadow:3px 3px 0 #000; }
+  .reward.locked{ border-color:var(--line); opacity:.6; }
+  .reward.unlocked{ border-color:var(--green); }
+  .reward .rt{ font-size:12px; } .reward .rl{ font-size:9px; color:var(--dim); }
+  .reward .rstate{ font-size:10px; font-weight:bold; }
+
+  .overlay{ position:fixed; inset:0; background:rgba(0,0,0,.85); display:flex; align-items:center; justify-content:center; padding:14px; z-index:60; }
+  .modal{ background:var(--panel); border:4px solid var(--cyan); padding:18px; max-width:380px; width:100%; max-height:90vh; overflow-y:auto; box-shadow:6px 6px 0 #000; }
+  .modal h3{ font-size:15px; color:var(--cyan); margin-bottom:14px; text-shadow:2px 2px 0 #000; }
+  label{ display:block; font-size:11px; font-weight:bold; color:var(--dim); margin-bottom:6px; }
+  input{ width:100%; background:var(--screen); border:3px solid #000; padding:8px 12px; color:var(--text); font-family:'Courier New',monospace; margin-bottom:14px; text-transform:uppercase; }
+  input:focus{ outline:none; border-color:var(--cyan); }
+  .hint{ font-size:10px; color:var(--dim); margin:-10px 0 14px; text-transform:none; }
+  .colors{ display:grid; grid-template-columns:repeat(6,1fr); gap:6px; margin-bottom:14px; }
+  .color{ aspect-ratio:1; border:3px solid #000; cursor:pointer; }
+  .color.sel{ border-color:#fff; }
+  .modal-actions{ display:flex; gap:6px; }
+
+  /* level up banner */
+  #levelup{ position:fixed; top:14px; left:0; right:0; display:flex; justify-content:center; z-index:80; pointer-events:none; padding:0 14px; }
+  #levelup .lu-box{ background:var(--yellow); color:#000; border:4px solid #000; padding:12px 22px; text-align:center; box-shadow:5px 5px 0 #000; animation:pop .3s steps(3); pointer-events:auto; cursor:pointer; }
+  #levelup .lu-t{ font-size:18px; font-weight:bold; }
+  #levelup .lu-num{ font-size:26px; font-weight:bold; }
+  @keyframes pop{ from{ transform:scale(.6); } to{ transform:scale(1); } }
+
+  .hidden{ display:none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="device">
+
+  <div class="logo-wrap">
+    <div class="logo-cmd"><span class="p">&gt;</span><span class="a">RESPEC</span><span class="b">YOU</span><span class="logo-arrow"></span></div>
+    <div class="logo-xp"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on lead"></i><i></i><i></i><i></i><i></i></div>
+    <div class="logo-sub">Level up dein Leben</div>
+  </div>
+
+  <div class="topbar">
+    <button class="pbtn yellow" onclick="openSettings()">⚙ Menü</button>
+  </div>
+
+  <div class="panel" style="border-color:var(--cyan)">
+    <div class="row">
+      <div>
+        <div class="lvl">Lvl <span id="level">1</span></div>
+        <div class="lvl-sub"><span id="totalXP">0</span> XP Total</div>
+      </div>
+      <div class="streak-box">
+        <div class="streak-num" id="streak">0</div>
+        <div class="streak-lbl" id="streak-lbl">Tage</div>
+      </div>
+    </div>
+    <div class="bar-info">
+      <span><span id="curXP">0</span>/<span id="needXP">100</span> XP</span>
+      <span style="color:var(--cyan)">Next Lvl</span>
+    </div>
+    <div class="bar-bg"><div class="bar-fill" id="bar" style="width:0%"></div></div>
+  </div>
+
+  <div class="stats">
+    <div class="stat p"><div class="n" id="s-goals">0</div><div class="l">Ziele</div></div>
+    <div class="stat g"><div class="n" id="s-comp">0</div><div class="l">Done</div></div>
+    <div class="stat y"><div class="n" id="s-ach">0</div><div class="l">Erfolge</div></div>
+  </div>
+
+  <div style="margin-bottom:16px">
+    <div class="sec-title gold" style="margin-bottom:10px">Tages-Quests</div>
+    <div id="quests"></div>
+  </div>
+
+  <div id="daily" style="margin-bottom:16px"></div>
+
+  <div id="challenge" style="margin-bottom:16px"></div>
+
+  <div style="margin-bottom:16px">
+    <div class="sec-head">
+      <div class="sec-title">Deine Ziele</div>
+      <button class="pbtn cyan" onclick="openCreate()">+ Ziel</button>
+    </div>
+    <div id="goals"></div>
+  </div>
+
+  <div style="margin-bottom:16px">
+    <div class="sec-head">
+      <div class="sec-title green">Belohnungen</div>
+      <button class="pbtn green" onclick="openReward()">+ Belohnung</button>
+    </div>
+    <div id="rewards"></div>
+  </div>
+
+  <button class="pbtn ghost" style="width:100%;padding:13px;margin-top:4px" onclick="openOverview()">📊 Übersicht — Aktivitäten & Statistik</button>
+
+</div>
+</div>
+
+<!-- Übersicht modal -->
+<div class="overlay hidden" id="ovmodal" onclick="if(event.target===this)closeOverview()">
+  <div class="modal" style="border-color:var(--cyan); max-width:420px">
+    <h3 style="color:var(--cyan)">Übersicht</h3>
+    <div class="panel hidden" id="stat-section" style="border-color:var(--cyan)">
+      <div class="sec-title" style="margin-bottom:10px">XP Letzte 7 Tage</div>
+      <div class="chart" id="chartXP"></div>
+      <div class="sec-title pink" style="margin:18px 0 10px">Trainings / Woche</div>
+      <div class="chart" id="chartWeek"></div>
+      <div class="sec-title green" style="margin:18px 0 10px">Streak-Kalender</div>
+      <div class="heat-head"><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span></div>
+      <div class="heat" id="heat"></div>
+    </div>
+    <div class="hidden" id="act-section" style="margin-top:14px">
+      <div class="sec-title pink" style="margin-bottom:10px">Letzte Aktivitäten</div>
+      <div class="act-list" id="activities"></div>
+    </div>
+    <div id="ov-empty" class="empty hidden">Noch keine Aktivitäten.<br>Schließ ein Ziel ab oder synchronisiere deine Schritte!</div>
+    <div class="modal-actions" style="margin-top:12px">
+      <button class="pbtn ghost" style="flex:1" onclick="closeOverview()">Schließen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Goal modal -->
+<div class="overlay hidden" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <h3 id="modal-title">Neues Ziel</h3>
+    <label>Ziel Name</label>
+    <input type="text" id="g-name" placeholder="z.B. Dead Hang">
+    <label>Punkte pro Abschluss</label>
+    <input type="number" id="g-points" value="10" min="1">
+    <label>Wochenziel (0 = keins)</label>
+    <input type="number" id="g-weekly" value="0" min="0">
+    <div class="hint">Wie oft pro Woche? Zeigt einen Wochen-Fortschritt.</div>
+    <label>Farbe</label>
+    <div class="colors" id="colors"></div>
+    <div class="modal-actions">
+      <button class="pbtn cyan" id="modal-save" style="flex:1" onclick="saveGoal()">Erstellen</button>
+      <button class="pbtn ghost" onclick="closeModal()">Abbruch</button>
+    </div>
+  </div>
+</div>
+
+<!-- Reward modal -->
+<div class="overlay hidden" id="rmodal" onclick="if(event.target===this)closeReward()">
+  <div class="modal" style="border-color:var(--green)">
+    <h3 style="color:var(--green)">Belohnung</h3>
+    <label>Ab Level</label>
+    <input type="number" id="r-level" value="5" min="1">
+    <label>Belohnung</label>
+    <input type="text" id="r-text" placeholder="z.B. Neues Trainings-Shirt">
+    <div class="modal-actions">
+      <button class="pbtn green" style="flex:1" onclick="saveReward()">Speichern</button>
+      <button class="pbtn ghost" onclick="closeReward()">Abbruch</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings modal -->
+<div class="overlay hidden" id="smodal" onclick="if(event.target===this)closeSettings()">
+  <div class="modal" style="border-color:var(--yellow)">
+    <h3 style="color:var(--yellow)">Menü</h3>
+
+    <div id="last-ach" class="last-ach"></div>
+
+    <div class="sec-title" style="font-size:13px;margin:2px 0 6px">App</div>
+    <div class="hint" id="set-version" style="text-transform:none;margin:0 0 8px">Version –</div>
+    <div class="colors" style="grid-template-columns:1fr;margin-bottom:14px">
+      <button class="pbtn green" onclick="checkForUpdate(true)">↻ Nach Update suchen</button>
+    </div>
+
+    <div class="sec-title cyan" style="font-size:13px;margin:2px 0 6px">Daten</div>
+    <div class="colors" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:14px">
+      <button class="pbtn ghost" onclick="exportData()">⬇ Backup</button>
+      <button class="pbtn ghost" onclick="document.getElementById('importFile').click()">⬆ Laden</button>
+      <button class="pbtn cyan hidden" id="btn-health" onclick="syncHealth({interactive:true})">⌚ Sync</button>
+    </div>
+    <input type="file" id="importFile" accept="application/json,.json" class="hidden" onchange="importData(event)">
+
+    <div class="sec-title green" style="font-size:13px;margin:2px 0 6px">XP &amp; Belohnungen</div>
+    <label>XP je 100 Schritte</label>
+    <input type="number" id="set-steps" min="0" step="1" value="1">
+    <label>XP je 10 aktive kcal</label>
+    <input type="number" id="set-kcal" min="0" step="1" value="1">
+    <label>Max. XP pro Tag (Aktivität)</label>
+    <input type="number" id="set-cap" min="0" step="10" value="200">
+    <label>Streak-Bonus</label>
+    <div class="hint" style="margin:0 0 10px">Mehr XP für abgeschlossene Ziele bei langer Serie: ab 7 Tagen ×1.15, ab 14 Tagen ×1.3, ab 30 Tagen ×1.5.</div>
+    <div class="colors" style="grid-template-columns:1fr 1fr;margin-bottom:4px">
+      <button class="pbtn green" id="set-bonus-on" onclick="selBonus=true;renderBonusBtns()">AN</button>
+      <button class="pbtn ghost" id="set-bonus-off" onclick="selBonus=false;renderBonusBtns()">AUS</button>
+    </div>
+
+    <div class="sec-title" style="font-size:13px;margin:12px 0 6px">Erinnerungen</div>
+    <label>Tägliche Erinnerung – Uhrzeit (0–23)</label>
+    <input type="number" id="set-hour" min="0" max="23" value="19">
+
+    <div class="sec-title" style="color:var(--purple);font-size:13px;margin:12px 0 6px">Anpassen</div>
+    <div class="colors" style="grid-template-columns:1fr 1fr;margin-bottom:8px">
+      <button class="pbtn cyan" onclick="closeSettings();openActivities()">Aktivitäten</button>
+      <button class="pbtn" style="background:var(--purple)" onclick="closeSettings();openThemes()">Farbdarstellung</button>
+    </div>
+    <div class="colors" style="grid-template-columns:1fr;margin-bottom:8px">
+      <button class="pbtn yellow" onclick="openAchievements()">🏆 Erfolge ansehen</button>
+    </div>
+
+    <div class="sec-title" style="color:var(--pink);font-size:13px;margin:12px 0 6px">Feedback</div>
+    <div class="hint" style="margin:0 0 8px">Fehler gefunden oder eine Idee? Schreib uns – wir lesen alles.</div>
+    <div class="colors" style="grid-template-columns:1fr;margin-bottom:6px">
+      <button class="pbtn" style="background:var(--pink)" onclick="sendFeedback()">✉ Feedback senden</button>
+    </div>
+
+    <div class="modal-actions" style="margin-top:14px">
+      <button class="pbtn yellow" style="flex:1" onclick="saveSettings()">Speichern</button>
+      <button class="pbtn ghost" onclick="closeSettings()">Schließen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Erfolge -->
+<div class="overlay hidden" id="emodal" onclick="if(event.target===this)closeAchievements()">
+  <div class="modal" style="border-color:var(--yellow)">
+    <h3 style="color:var(--yellow)">🏆 Erfolge</h3>
+    <div id="ach-empty" class="hint" style="text-transform:none">Noch keine Erfolge – leg los und sammle deinen ersten!</div>
+    <div class="ach-grid" id="achievements"></div>
+    <div class="modal-actions" style="margin-top:12px">
+      <button class="pbtn ghost" style="flex:1" onclick="closeAchievements()">Schließen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Aktivitäten-Fragebogen -->
+<div class="overlay hidden" id="amodal" onclick="if(event.target===this)closeActivities()">
+  <div class="modal" style="border-color:var(--cyan)">
+    <h3 style="color:var(--cyan)">Deine Aktivitäten</h3>
+    <div class="hint">Was kannst/willst du machen? Alles ohne Fitnessstudio. Deine Auswahl speist die Wochenchallenge.</div>
+    <div id="act-checklist"></div>
+    <div class="modal-actions" style="margin-top:12px">
+      <button class="pbtn cyan" style="flex:1" onclick="saveActivities()">Speichern</button>
+      <button class="pbtn ghost" onclick="closeActivities()">Abbruch</button>
+    </div>
+  </div>
+</div>
+
+<!-- Farbdarstellung / Themes -->
+<div class="overlay hidden" id="tmodal" onclick="if(event.target===this)closeThemes()">
+  <div class="modal" style="border-color:var(--purple)">
+    <h3 style="color:var(--purple)">Farbdarstellung</h3>
+    <div class="hint">Neue Designs schaltest du frei – alle 5 Level eins mehr!</div>
+    <div id="theme-list"></div>
+    <div class="modal-actions" style="margin-top:12px">
+      <button class="pbtn ghost" style="flex:1" onclick="closeThemes()">Schließen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Update -->
+<div class="overlay hidden" id="umodal" onclick="if(event.target===this)closeUpdate()">
+  <div class="modal" style="border-color:var(--green)">
+    <h3 style="color:var(--green)">★ Update verfügbar</h3>
+    <div class="rt" id="u-version" style="margin-bottom:8px">Neue Version</div>
+    <div class="hint" id="u-notes" style="text-transform:none;max-height:150px;overflow:auto;color:var(--text)">Verbesserungen & neue Funktionen.</div>
+    <div class="hint" style="text-transform:none;color:var(--dim)">Vor dem Update wird automatisch ein Backup gesichert – dein Fortschritt bleibt erhalten.</div>
+    <div class="modal-actions" style="margin-top:12px">
+      <button class="pbtn green" style="flex:1" onclick="startUpdate()">Jetzt laden</button>
+      <button class="pbtn ghost" onclick="closeUpdate()">Später</button>
+    </div>
+  </div>
+</div>
+
+<!-- Aktivitäts-Tipps -->
+<div class="overlay hidden" id="tipmodal" onclick="if(event.target===this)closeTips()">
+  <div class="modal" style="border-color:var(--green)">
+    <h3 style="color:var(--green)">Aktivitäts-Tipps</h3>
+    <div class="hint">Sport ohne Studio – Ideen für den Alltag.</div>
+    <div id="tip-list"></div>
+    <div class="modal-actions" style="margin-top:12px">
+      <button class="pbtn ghost" style="flex:1" onclick="closeTips()">Schließen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Level up banner -->
+<div id="levelup" class="hidden">
+  <div class="lu-box" onclick="document.getElementById('levelup').classList.add('hidden')">
+    <div class="lu-t">★ Level Up ★</div>
+    <div class="lu-num">Level 2</div>
+  </div>
+</div>
+
+<script>
+  var COLORS=['#2ce8f5','#ff5fa2','#ffd93b','#3ddc84','#b388ff','#ff8c42'];
+  var selColor=COLORS[0];
+  var editingId=null;
+
+  var data={ goals:[], totalXP:0, level:1, streak:0, lastActivity:null, completions:[], achievements:[], rewards:[] };
+
+  function load(){ try{ var s=localStorage.getItem('fitnessXP'); if(s) data=JSON.parse(s); }catch(e){}
+    if(!data.rewards) data.rewards=[];
+    if(!data.settings) data.settings={};
+    var S=data.settings;
+    if(S.reminderHour==null) S.reminderHour=19;
+    if(S.xpPer100Steps==null) S.xpPer100Steps=1;
+    if(S.xpPer10Kcal==null) S.xpPer10Kcal=1;
+    if(S.dailyCap==null) S.dailyCap=200;
+    if(S.streakBonus==null) S.streakBonus=true;
+    if(!data.questClaims) data.questClaims={}; }
+  function save(){ try{ localStorage.setItem('fitnessXP', JSON.stringify(data)); }catch(e){}
+    try{ if(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.Preferences){ Capacitor.Plugins.Preferences.set({ key:'fitnessXP', value:JSON.stringify(data) }); } }catch(e){} }
+
+  function xpForLevel(lvl){ return Math.floor(100*Math.pow(1.5,lvl-1)); }
+
+  function startOfWeek(dt){ var d=new Date(dt); d.setHours(0,0,0,0); var day=d.getDay(); var diff=(day===0?-6:1-day); d.setDate(d.getDate()+diff); return d; }
+  function weekCount(goalId){ var ws=startOfWeek(new Date()).getTime();
+    return data.completions.filter(function(c){ return c.goalId===goalId && new Date(c.date).getTime()>=ws; }).length; }
+
+  function updateStreak(){
+    var today=new Date().toDateString();
+    var yest=new Date(Date.now()-86400000).toDateString();
+    if(data.lastActivity===today) return data.streak;
+    if(data.lastActivity===yest || !data.lastActivity) return data.streak+1;
+    return 1;
+  }
+
+  function vibrate(p){ if(navigator.vibrate){ try{ navigator.vibrate(p); }catch(e){} } }
+
+  /* ---- Etappe 2: Streak-Bonus, Tages-Quests & Einstellungen ---- */
+  window.toast=function(){};   // Web-Fallback; in der App überschrieben (native)
+  function streakMult(){ var S=data.settings||{}; if(S.streakBonus===false) return 1; var s=data.streak||0; if(s>=30) return 1.5; if(s>=14) return 1.3; if(s>=7) return 1.15; return 1; }
+  function _today(){ return new Date().toDateString(); }
+  function stepsToday(){ var d=data.healthSync&&data.healthSync[_today()]; return d?(d.steps||0):0; }
+  function goalsDoneToday(){ var k=_today(); return data.completions.filter(function(c){ return c.goalId&&new Date(c.date).toDateString()===k; }).length; }
+  function anyDoneToday(){ var k=_today(); return data.completions.some(function(c){ return new Date(c.date).toDateString()===k; }); }
+  function questList(){ return [ {id:'steps5k',label:'5.000 Schritte',xp:20}, {id:'goals3',label:'3 Ziele abschließen',xp:15}, {id:'active',label:'Heute aktiv sein',xp:10} ]; }
+  function questDone(q){ if(q.id==='steps5k') return stepsToday()>=5000; if(q.id==='goals3') return goalsDoneToday()>=3; if(q.id==='active') return anyDoneToday(); return false; }
+  function checkQuests(){
+    if(!data.questClaims) data.questClaims={};
+    var k=_today(); var claims=data.questClaims[k]||(data.questClaims[k]={});
+    var awarded=0, oldLevel=data.level;
+    questList().forEach(function(q){ if(!claims[q.id] && questDone(q)){ claims[q.id]=true; data.totalXP+=q.xp; awarded+=q.xp; } });
+    if(awarded>0){
+      var newLevel=data.level; while(data.totalXP>=xpForLevel(newLevel+1)) newLevel++; data.level=newLevel;
+      checkAch(); save(); render();
+      if(newLevel>oldLevel) showLevelUp(newLevel);
+      try{ toast('Quest geschafft! +'+awarded+' XP'); }catch(e){}
+    }
+  }
+  function renderQuests(){
+    var el=document.getElementById('quests'); if(!el) return;
+    var claims=(data.questClaims&&data.questClaims[_today()])||{};
+    el.innerHTML='';
+    questList().forEach(function(q){
+      var done=claims[q.id]||questDone(q);
+      var d=document.createElement('div'); d.className='quest'+(done?' done':'');
+      d.innerHTML='<span class="q-t">'+esc(q.label)+'</span><span class="q-x">'+(done?'✓ ':'')+'+'+q.xp+' XP</span>';
+      el.appendChild(d);
+    });
+  }
+  var selBonus=true;
+  function renderBonusBtns(){ var on=document.getElementById('set-bonus-on'), off=document.getElementById('set-bonus-off'); if(!on||!off) return; on.className='pbtn '+(selBonus?'green':'ghost'); off.className='pbtn '+(selBonus?'ghost':'red'); }
+  function openSettings(){
+    var S=data.settings||{};
+    document.getElementById('set-hour').value=(S.reminderHour!=null?S.reminderHour:19);
+    document.getElementById('set-steps').value=(S.xpPer100Steps!=null?S.xpPer100Steps:1);
+    document.getElementById('set-kcal').value=(S.xpPer10Kcal!=null?S.xpPer10Kcal:1);
+    document.getElementById('set-cap').value=(S.dailyCap!=null?S.dailyCap:200);
+    selBonus=(S.streakBonus!==false); renderBonusBtns();
+    var sv=document.getElementById('set-version'); if(sv) sv.textContent='Version '+(window.__appVersion||'1.0');
+    var la=document.getElementById('last-ach');
+    if(la){ var arr=data.achievements||[]; if(arr.length){ var a=arr[arr.length-1]; la.innerHTML='<div class="cap">LETZTER ERFOLG</div><div class="ic">'+a.icon+'</div><div class="nm">'+esc(a.name)+'</div>'; la.classList.add('show'); } else { la.classList.remove('show'); la.innerHTML=''; } }
+    document.getElementById('smodal').classList.remove('hidden');
+  }
+  function closeSettings(){ document.getElementById('smodal').classList.add('hidden'); }
+  function openOverview(){ render(); var e=document.getElementById('ov-empty'); if(e){ if((data.completions||[]).length>0) e.classList.add('hidden'); else e.classList.remove('hidden'); } document.getElementById('ovmodal').classList.remove('hidden'); }
+  function closeOverview(){ document.getElementById('ovmodal').classList.add('hidden'); }
+  window.openOverview=openOverview; window.closeOverview=closeOverview;
+  function openAchievements(){ render(); document.getElementById('emodal').classList.remove('hidden'); }
+  function closeAchievements(){ document.getElementById('emodal').classList.add('hidden'); }
+  window.openAchievements=openAchievements; window.closeAchievements=closeAchievements;
+  function sendFeedback(){
+    var v=window.__appVersion||'';
+    var subj='RespecYou Feedback'+(v?(' (v'+v+')'):'');
+    var body='Dein Feedback oder deine Idee:\n\n\n\n— — —\nApp-Version: '+v+'\n';
+    var url='mailto:khaosde@gmx.net?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body);
+    try{ window.location.href=url; }catch(e){ try{ window.open(url,'_blank'); }catch(e2){} }
+  }
+  window.sendFeedback=sendFeedback;
+  function saveSettings(){
+    var S=data.settings||(data.settings={});
+    var h=parseInt(document.getElementById('set-hour').value); S.reminderHour=(isNaN(h)?19:Math.max(0,Math.min(23,h)));
+    var st=parseFloat(document.getElementById('set-steps').value); S.xpPer100Steps=(isNaN(st)?1:st);
+    var kc=parseFloat(document.getElementById('set-kcal').value); S.xpPer10Kcal=(isNaN(kc)?1:kc);
+    var cp=parseInt(document.getElementById('set-cap').value); S.dailyCap=(isNaN(cp)?200:cp);
+    S.streakBonus=selBonus;
+    save(); closeSettings(); render();
+    try{ if(window.__rescheduleReminder) window.__rescheduleReminder(); }catch(e){}
+  }
+
+  function completeGoal(id){
+    var goal=data.goals.find(function(g){ return g.id===id; });
+    if(!goal) return;
+    var oldLevel=data.level;
+    var gained=Math.round(goal.points*streakMult());
+    data.totalXP+=gained;
+    data.streak=updateStreak();
+    data.lastActivity=new Date().toDateString();
+    data.completions.unshift({ id:Date.now(), goalId:goal.id, goalName:goal.name, points:gained, date:new Date().toISOString() });
+    data.completions=data.completions.slice(0,200);
+    vibrate(30);
+
+    var newLevel=data.level;
+    while(data.totalXP>=xpForLevel(newLevel+1)) newLevel++;
+    data.level=newLevel;
+    checkAch();
+    save(); render();
+    if(newLevel>oldLevel) showLevelUp(newLevel);
+    checkQuests();
+    try{ checkChallenge(); }catch(e){}
+    try{ checkDailyChallenge(); }catch(e){}
+  }
+
+  var luTimer=null;
+  function showLevelUp(n){
+    var b=document.getElementById('levelup');
+    b.querySelector('.lu-num').textContent='Level '+n;
+    b.classList.remove('hidden');
+    vibrate([120,60,120,60,220]);
+    if(luTimer) clearTimeout(luTimer);
+    luTimer=setTimeout(function(){ b.classList.add('hidden'); },1800);
+    try{ checkThemeUnlocks(n); }catch(e){}
+  }
+
+  function checkAch(){
+    var a=data.achievements; function has(id){ return a.some(function(x){return x.id===id;}); }
+    function add(id,name,icon){ if(!has(id)) a.push({id:id,name:name,icon:icon}); }
+    var c=data.completions.length;
+    if(c>=1) add('first','Erstes Training',' 🎯');
+    if(c>=10) add('c10','10 Trainings','💪');
+    if(c>=50) add('c50','50 Trainings','🏅');
+    if(c>=100) add('c100','100 Trainings','🎖️');
+    if(data.level>=3) add('l3','Level 3','⭐');
+    if(data.level>=5) add('l5','Level 5','🏆');
+    if(data.level>=10) add('l10','Level 10','👑');
+    if(data.level>=20) add('l20','Level 20','🌟');
+    if(data.streak>=3) add('s3','3 Tage','🔥');
+    if(data.streak>=7) add('s7','7 Tage','🔥');
+    if(data.streak>=14) add('s14','14 Tage','🔥');
+    if(data.streak>=30) add('s30','30 Tage','🔥');
+    if(data.streak>=100) add('s100','100 Tage','💎');
+  }
+
+  function deleteGoal(id){ if(confirm('Ziel wirklich löschen?')){ data.goals=data.goals.filter(function(g){return g.id!==id;}); save(); render(); } }
+
+  function openCreate(){
+    editingId=null;
+    document.getElementById('modal-title').textContent='Neues Ziel';
+    document.getElementById('modal-save').textContent='Erstellen';
+    document.getElementById('g-name').value='';
+    document.getElementById('g-points').value='10';
+    document.getElementById('g-weekly').value='0';
+    selColor=COLORS[0]; renderColors();
+    document.getElementById('modal').classList.remove('hidden');
+  }
+  function openEdit(id){
+    var g=data.goals.find(function(x){return x.id===id;}); if(!g) return;
+    editingId=id;
+    document.getElementById('modal-title').textContent='Ziel Bearbeiten';
+    document.getElementById('modal-save').textContent='Speichern';
+    document.getElementById('g-name').value=g.name;
+    document.getElementById('g-points').value=g.points;
+    document.getElementById('g-weekly').value=g.weekly||0;
+    selColor=g.color; renderColors();
+    document.getElementById('modal').classList.remove('hidden');
+  }
+  function closeModal(){ document.getElementById('modal').classList.add('hidden'); }
+
+  function saveGoal(){
+    var name=document.getElementById('g-name').value.trim();
+    var pts=parseInt(document.getElementById('g-points').value)||10;
+    var wk=parseInt(document.getElementById('g-weekly').value)||0;
+    if(!name){ alert('Bitte gib einen Namen ein!'); return; }
+    if(editingId){ var g=data.goals.find(function(x){return x.id===editingId;});
+      if(g){ g.name=name; g.points=pts; g.weekly=wk; g.color=selColor; } }
+    else { data.goals.push({ id:Date.now(), name:name, points:pts, weekly:wk, color:selColor }); }
+    save(); closeModal(); render();
+  }
+
+  function renderColors(){
+    var c=document.getElementById('colors'); c.innerHTML='';
+    COLORS.forEach(function(col){
+      var b=document.createElement('button');
+      b.className='color'+(col===selColor?' sel':''); b.style.background=col;
+      b.onclick=function(){ selColor=col; renderColors(); };
+      c.appendChild(b);
+    });
+  }
+
+  /* rewards */
+  function openReward(){ document.getElementById('r-level').value='5'; document.getElementById('r-text').value=''; document.getElementById('rmodal').classList.remove('hidden'); }
+  function closeReward(){ document.getElementById('rmodal').classList.add('hidden'); }
+  function saveReward(){
+    var lvl=parseInt(document.getElementById('r-level').value)||1;
+    var txt=document.getElementById('r-text').value.trim();
+    if(!txt){ alert('Bitte Belohnung eingeben!'); return; }
+    data.rewards.push({ id:Date.now(), level:lvl, text:txt });
+    save(); closeReward(); render();
+  }
+  function deleteReward(id){ data.rewards=data.rewards.filter(function(r){return r.id!==id;}); save(); render(); }
+
+  function exportData(){
+    try{
+      var blob=new Blob([JSON.stringify(data)],{type:'application/json'});
+      var url=URL.createObjectURL(blob); var a=document.createElement('a');
+      var d=new Date(); var stamp=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+      a.href=url; a.download='fitness-xp-backup-'+stamp+'.json';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    }catch(e){ alert('Backup fehlgeschlagen.'); }
+  }
+  function importData(ev){
+    var file=ev.target.files[0]; if(!file) return;
+    var reader=new FileReader();
+    reader.onload=function(e){
+      try{
+        var imp=JSON.parse(e.target.result);
+        if(!imp||!Array.isArray(imp.goals)) throw new Error('x');
+        if(!confirm('Backup laden? Aktuelle Daten werden überschrieben.')){ ev.target.value=''; return; }
+        data={ goals:imp.goals||[], totalXP:imp.totalXP||0, level:imp.level||1, streak:imp.streak||0,
+          lastActivity:imp.lastActivity||null, completions:imp.completions||[], achievements:imp.achievements||[], rewards:imp.rewards||[] };
+        save(); render(); alert('Backup geladen!');
+      }catch(err){ alert('Datei ungültig oder beschädigt.'); }
+      ev.target.value='';
+    };
+    reader.readAsText(file);
+  }
+
+  function esc(s){ return String(s).replace(/[&<>"']/g,function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]; }); }
+
+  /* chart data */
+  function last7XP(){
+    var out=[]; var wd=['So','Mo','Di','Mi','Do','Fr','Sa'];
+    for(var i=6;i>=0;i--){
+      var d=new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()-i);
+      var key=d.toDateString();
+      var xp=data.completions.filter(function(c){return new Date(c.date).toDateString()===key;}).reduce(function(s,c){return s+c.points;},0);
+      out.push({ lbl:wd[d.getDay()], val:xp });
+    }
+    return out;
+  }
+  function weekly6(){
+    var out=[]; var ws=startOfWeek(new Date());
+    for(var i=5;i>=0;i--){
+      var s=new Date(ws); s.setDate(s.getDate()-i*7);
+      var e=new Date(s); e.setDate(e.getDate()+7);
+      var cnt=data.completions.filter(function(c){ var t=new Date(c.date).getTime(); return t>=s.getTime()&&t<e.getTime(); }).length;
+      out.push({ lbl:('0'+s.getDate()).slice(-2)+'.'+('0'+(s.getMonth()+1)).slice(-2), val:cnt });
+    }
+    return out;
+  }
+  function heatDays(){
+    var start=startOfWeek(new Date()); start.setDate(start.getDate()-7*4);
+    var cells=[]; var todayKey=new Date().toDateString();
+    for(var i=0;i<35;i++){
+      var d=new Date(start); d.setDate(start.getDate()+i); var key=d.toDateString();
+      var cnt=data.completions.filter(function(c){return new Date(c.date).toDateString()===key;}).length;
+      cells.push({ cnt:cnt, future:d.getTime()>Date.now(), today:key===todayKey });
+    }
+    return cells;
+  }
+
+  function renderCharts(){
+    var any=data.completions.length>0;
+    var sect=document.getElementById('stat-section');
+    if(!any){ sect.classList.add('hidden'); return; }
+    sect.classList.remove('hidden');
+
+    var xp=last7XP(); var maxXP=Math.max.apply(null,xp.map(function(d){return d.val;}).concat([1]));
+    var cx=document.getElementById('chartXP'); cx.innerHTML='';
+    xp.forEach(function(d){
+      var col=document.createElement('div'); col.className='col';
+      var h=d.val>0?Math.max((d.val/maxXP)*80,6):0;
+      col.innerHTML='<div class="val">'+(d.val||'')+'</div><div class="barv" style="height:'+h+'px;background:var(--cyan)"></div><div class="lbl">'+d.lbl+'</div>';
+      cx.appendChild(col);
+    });
+
+    var wk=weekly6(); var maxWk=Math.max.apply(null,wk.map(function(d){return d.val;}).concat([1]));
+    var cw=document.getElementById('chartWeek'); cw.innerHTML='';
+    wk.forEach(function(d){
+      var col=document.createElement('div'); col.className='col';
+      var h=d.val>0?Math.max((d.val/maxWk)*80,6):0;
+      col.innerHTML='<div class="val">'+(d.val||'')+'</div><div class="barv" style="height:'+h+'px;background:var(--pink)"></div><div class="lbl">'+d.lbl+'</div>';
+      cw.appendChild(col);
+    });
+
+    var heat=heatDays(); var hc=document.getElementById('heat'); hc.innerHTML='';
+    heat.forEach(function(c){
+      var div=document.createElement('div'); div.className='cell'+(c.today?' today':'');
+      var bg='#16241a';
+      if(!c.future){
+        if(c.cnt>=3) bg='#76e36b'; else if(c.cnt===2) bg='#43a047'; else if(c.cnt===1) bg='#2e5d34';
+      }
+      div.style.background=bg; hc.appendChild(div);
+    });
+  }
+
+  function render(){
+    document.getElementById('level').textContent=data.level;
+    document.getElementById('totalXP').textContent=data.totalXP;
+    document.getElementById('streak').textContent=data.streak;
+    var _sm=streakMult(); var _sl=document.getElementById('streak-lbl'); if(_sl) _sl.textContent=(_sm>1?('Tage ×'+_sm):'Tage');
+    renderQuests();
+    try{ renderDaily(); }catch(e){}
+    try{ renderChallenge(); }catch(e){}
+
+    var curBase=xpForLevel(data.level); var nextBase=xpForLevel(data.level+1);
+    var cur=data.totalXP-curBase; var need=nextBase-curBase;
+    document.getElementById('curXP').textContent=cur;
+    document.getElementById('needXP').textContent=need;
+    document.getElementById('bar').style.width=Math.min((cur/need)*100,100)+'%';
+
+    document.getElementById('s-goals').textContent=data.goals.length;
+    document.getElementById('s-comp').textContent=data.completions.length;
+    document.getElementById('s-ach').textContent=data.achievements.length;
+
+    var gc=document.getElementById('goals');
+    if(data.goals.length===0){
+      gc.innerHTML='<div class="empty">Noch keine Ziele.<br>Klicke auf "+ Ziel" um zu starten!</div>';
+    } else {
+      gc.innerHTML='';
+      data.goals.forEach(function(g){
+        var d=document.createElement('div'); d.className='goal'; d.style.borderColor=g.color;
+        var weekHtml='';
+        if(g.weekly&&g.weekly>0){
+          var done=weekCount(g.id); var pct=Math.min((done/g.weekly)*100,100); var reached=done>=g.weekly;
+          weekHtml='<div class="week"><div class="week-info"><span>Woche: '+done+'/'+g.weekly+(reached?' ✓':'')+'</span></div>'+
+            '<div class="week-bg"><div class="week-fill" style="width:'+pct+'%;background:'+(reached?'var(--green)':g.color)+'"></div></div></div>';
+        }
+        d.innerHTML='<div class="row"><div><h3>'+esc(g.name)+'</h3><div class="pts">+'+g.points+' XP</div></div>'+
+          '<div class="goal-actions"><button class="pbtn green">Done</button><button class="pbtn blue">✎</button><button class="pbtn red">✕</button></div></div>'+weekHtml;
+        var btns=d.querySelectorAll('button');
+        btns[0].onclick=function(){ completeGoal(g.id); };
+        btns[1].onclick=function(){ openEdit(g.id); };
+        btns[2].onclick=function(){ deleteGoal(g.id); };
+        gc.appendChild(d);
+      });
+    }
+
+    renderCharts();
+
+    var rc=document.getElementById('rewards');
+    if(data.rewards.length===0){
+      rc.innerHTML='<div class="empty">Noch keine Belohnungen.<br>Leg fest, was du dir bei welchem Level gönnst!</div>';
+    } else {
+      rc.innerHTML='';
+      data.rewards.slice().sort(function(a,b){return a.level-b.level;}).forEach(function(r){
+        var unlocked=data.level>=r.level;
+        var d=document.createElement('div'); d.className='reward '+(unlocked?'unlocked':'locked');
+        d.innerHTML='<div><div class="rt">'+esc(r.text)+'</div><div class="rl">Ab Level '+r.level+'</div></div>'+
+          '<div style="display:flex;gap:8px;align-items:center"><span class="rstate" style="color:'+(unlocked?'var(--green)':'var(--dim)')+'">'+(unlocked?'✓ FREI':'🔒')+'</span><button class="pbtn red" style="padding:4px 8px">✕</button></div>';
+        d.querySelector('button').onclick=function(){ deleteReward(r.id); };
+        rc.appendChild(d);
+      });
+    }
+
+    var as=document.getElementById('act-section'); var al=document.getElementById('activities');
+    if(as&&al){
+      if(data.completions.length>0){
+        as.classList.remove('hidden'); al.innerHTML='';
+        data.completions.slice(0,10).forEach(function(c){
+          var dt=new Date(c.date); var d=document.createElement('div'); d.className='act';
+          d.innerHTML='<div><div class="name">'+esc(c.goalName)+'</div><div class="date">'+dt.toLocaleDateString('de-DE')+'</div></div><div class="xp">+'+c.points+' XP</div>';
+          al.appendChild(d);
+        });
+      } else { as.classList.add('hidden'); }
+    }
+
+    var achG=document.getElementById('achievements'); var achE=document.getElementById('ach-empty');
+    if(achG){
+      if(data.achievements.length>0){
+        if(achE) achE.classList.add('hidden'); achG.innerHTML='';
+        data.achievements.forEach(function(a){
+          var d=document.createElement('div'); d.className='ach';
+          d.innerHTML='<div class="ic">'+a.icon+'</div><div class="nm">'+esc(a.name)+'</div>';
+          achG.appendChild(d);
+        });
+      } else { if(achE) achE.classList.remove('hidden'); achG.innerHTML=''; }
+    }
+  }
+
+  /* ================= Etappe 1: Aktivitäten, Tipps, Themes ================= */
+  var ACTIVITIES=[
+    {id:'walk',    name:'Spazieren',      ic:'🚶', xp:10, tip:'Zählt automatisch über deine Schritte. 30 Min. flott gehen ≈ 3.000 Schritte.'},
+    {id:'run',     name:'Laufen',         ic:'🏃', xp:25, tip:'Einfach vor der Haustür loslaufen – 20–30 Min. reichen für den Einstieg.'},
+    {id:'bike',    name:'Radfahren',      ic:'🚴', xp:25, tip:'Kurze Alltagswege mit dem Rad statt Auto – Training ohne extra Zeit.'},
+    {id:'swim',    name:'Schwimmen',      ic:'🏊', xp:30, tip:'Gelenkschonend & ganzkörperlich. Freibad/See im Sommer, Halle im Winter.'},
+    {id:'hike',    name:'Wandern',        ic:'🥾', xp:30, tip:'Naturrunde am Wochenende – Ausdauer und Kopf frei zugleich.'},
+    {id:'rope',    name:'Seilspringen',   ic:'🪢', xp:20, tip:'5–10 Min. = intensives Cardio, braucht nur 2 m² Platz.'},
+    {id:'stairs',  name:'Treppensteigen', ic:'🪜', xp:15, tip:'Aufzug meiden – jede Etage zählt. Perfekt im Alltag/Büro.'},
+    {id:'pushups', name:'Liegestütze',    ic:'💪', xp:15, tip:'Kein Gerät nötig. Auch auf Knien möglich – Hauptsache regelmäßig.'},
+    {id:'squats',  name:'Kniebeugen',     ic:'🦵', xp:15, tip:'Beine & Po ohne Gewichte. Starte mit 3×15.'},
+    {id:'yoga',    name:'Yoga / Dehnen',  ic:'🧘', xp:15, tip:'Beweglichkeit & Entspannung – Video-Anleitungen reichen völlig.'},
+    {id:'dance',   name:'Tanzen',         ic:'💃', xp:20, tip:'Lieblingsmusik an – 3 Songs durchtanzen ist schon Cardio.'},
+    {id:'home',    name:'Hausarbeit',     ic:'🧹', xp:10, tip:'Putzen, Garten, Einkäufe tragen – Bewegung, die eh anfällt.'},
+    {id:'ball',    name:'Ballsport',      ic:'⚽', xp:25, tip:'Fußball/Basketball mit Freunden – Spaß plus Bewegung.'}
+  ];
+  function activityById(id){ return ACTIVITIES.filter(function(a){return a.id===id;})[0]; }
+
+  var THEMES=[
+    {id:'terminal',name:'Terminal Grün', lvl:1,  vars:{screen:'#0d1f12',panel:'#13301c',line:'#1f4a2c',text:'#d7f5d0',dim:'#6f9c78',cyan:'#2ce8f5',pink:'#ff5fa2',yellow:'#ffd93b',green:'#3ddc84',purple:'#b388ff',orange:'#ff8c42',bg:'#11160f'}},
+    {id:'amber',   name:'Bernstein CRT', lvl:1,  vars:{screen:'#241703',panel:'#3a2607',line:'#5a3d10',text:'#ffd493',dim:'#b3843f',cyan:'#ffb347',pink:'#ff7b3d',yellow:'#ffe08a',green:'#ffc14d',purple:'#ffab5e',orange:'#ff8c42',bg:'#1a1204'}},
+    {id:'ice',     name:'Eisblau',       lvl:5,  vars:{screen:'#0a1a24',panel:'#0f2a3a',line:'#1f4a5a',text:'#d0ecff',dim:'#6f9cb0',cyan:'#3ce8f5',pink:'#5fa2ff',yellow:'#7fd4ff',green:'#3ddce0',purple:'#88b3ff',orange:'#5ec8ff',bg:'#0a1016'}},
+    {id:'synth',   name:'Synthwave Lila',lvl:10, vars:{screen:'#1a0a24',panel:'#2a0f3a',line:'#4a1f5a',text:'#f0d0ff',dim:'#a06fb0',cyan:'#2ce8f5',pink:'#ff5fa2',yellow:'#ffd93b',green:'#b388ff',purple:'#d388ff',orange:'#ff6fd2',bg:'#140a1a'}},
+    {id:'crimson', name:'Crimson',       lvl:15, vars:{screen:'#240a0e',panel:'#3a0f16',line:'#5a1f28',text:'#ffd0d5',dim:'#b06f78',cyan:'#ff5f7a',pink:'#ff5fa2',yellow:'#ffd93b',green:'#ff7b6b',purple:'#ff88a0',orange:'#ff8c42',bg:'#1a0a0c'}},
+    {id:'gameboy', name:'Game Boy',      lvl:20, vars:{screen:'#0f380f',panel:'#213b21',line:'#4a7a2a',text:'#9bbc0f',dim:'#6a8a2a',cyan:'#8bac0f',pink:'#9bbc0f',yellow:'#cfe07a',green:'#8bac0f',purple:'#9bbc0f',orange:'#8bac0f',bg:'#0a2a0a'}},
+    {id:'mono',    name:'Monochrom',     lvl:25, vars:{screen:'#111111',panel:'#1e1e1e',line:'#3a3a3a',text:'#e8e8e8',dim:'#888888',cyan:'#ffffff',pink:'#cccccc',yellow:'#ffffff',green:'#dddddd',purple:'#bbbbbb',orange:'#eeeeee',bg:'#0a0a0a'}}
+  ];
+  function themeById(id){ return THEMES.filter(function(t){return t.id===id;})[0]; }
+  function currentThemeId(){ return (data.settings&&data.settings.theme)||'terminal'; }
+  function themeUnlocked(t){ return (data.level||1)>=t.lvl; }
+  function applyTheme(id){
+    var t=themeById(id)||THEMES[0];
+    if(!themeUnlocked(t)) t=THEMES[0];
+    var r=document.documentElement, v=t.vars;
+    ['screen','panel','line','text','dim','cyan','pink','yellow','green','purple','orange'].forEach(function(k){ r.style.setProperty('--'+k, v[k]); });
+    document.body.style.background=v.bg;
+  }
+
+  function miniToast(msg){
+    var t=document.createElement('div'); t.textContent=msg;
+    t.style.cssText='position:fixed;left:14px;right:14px;bottom:16px;z-index:95;background:var(--panel);color:var(--text);border:3px solid var(--yellow);box-shadow:4px 4px 0 #000;padding:12px 14px;font-size:12px;text-align:center;text-transform:uppercase;letter-spacing:1px;';
+    document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 4200);
+  }
+  function checkThemeUnlocks(level){
+    if(!data.unlockedThemes) data.unlockedThemes=[];
+    THEMES.forEach(function(t){
+      if(t.lvl>1 && level>=t.lvl && data.unlockedThemes.indexOf(t.id)<0){
+        data.unlockedThemes.push(t.id);
+        (function(name){ setTimeout(function(){ miniToast('★ Neues Design frei: '+name+' – ⚙ Farbdarstellung'); }, 2200); })(t.name);
+      }
+    });
+    save();
+  }
+
+  /* ---- Aktivitäten-Fragebogen ---- */
+  var selActivities=[];
+  function renderActivityChecklist(){
+    var c=document.getElementById('act-checklist'); if(!c) return; c.innerHTML='';
+    ACTIVITIES.forEach(function(a){
+      var on=selActivities.indexOf(a.id)>=0;
+      var d=document.createElement('div'); d.className='reward'; d.style.cssText='opacity:1;cursor:pointer;border-color:'+(on?'var(--green)':'var(--line)');
+      d.innerHTML='<div><div class="rt">'+a.ic+' '+a.name+'</div></div><div class="rstate" style="color:'+(on?'var(--green)':'var(--dim)')+'">'+(on?'✓':'○')+'</div>';
+      d.onclick=function(){ var i=selActivities.indexOf(a.id); if(i>=0) selActivities.splice(i,1); else selActivities.push(a.id); renderActivityChecklist(); };
+      c.appendChild(d);
+    });
+  }
+  function openActivities(){ selActivities=(data.activities||[]).slice(); renderActivityChecklist(); document.getElementById('amodal').classList.remove('hidden'); }
+  function closeActivities(){ document.getElementById('amodal').classList.add('hidden'); }
+  function saveActivities(){ data.activities=selActivities.slice(); data.onboarded=true; save(); closeActivities(); miniToast('Aktivitäten gespeichert: '+data.activities.length); }
+  window.openActivities=openActivities; window.closeActivities=closeActivities; window.saveActivities=saveActivities;
+
+  /* ---- Themes ---- */
+  function renderThemeList(){
+    var c=document.getElementById('theme-list'); if(!c) return; c.innerHTML='';
+    var cur=currentThemeId();
+    THEMES.forEach(function(t){
+      var unlocked=themeUnlocked(t), sel=(t.id===cur);
+      var sw=function(col){ return '<span style="display:inline-block;width:13px;height:13px;border:2px solid #000;background:'+col+';margin-right:3px;vertical-align:middle"></span>'; };
+      var swatch=sw(t.vars.yellow)+sw(t.vars.cyan)+sw(t.vars.green)+' ';
+      var d=document.createElement('div'); d.className='reward'; d.style.cssText='opacity:1;border-color:'+(sel?'var(--green)':(unlocked?'var(--line)':'var(--line)'));
+      var right;
+      if(!unlocked){ right='<span class="rstate" style="color:var(--dim)">🔒 ab Lvl '+t.lvl+'</span>'; }
+      else if(sel){ right='<span class="rstate" style="color:var(--green)">✓ AKTIV</span>'; }
+      else { right='<button class="pbtn cyan" style="padding:4px 8px">Wählen</button>'; }
+      d.innerHTML='<div><div class="rt">'+swatch+t.name+'</div></div><div>'+right+'</div>';
+      if(unlocked && !sel){ d.querySelector('button').onclick=function(){ selectTheme(t.id); }; }
+      c.appendChild(d);
+    });
+  }
+  function selectTheme(id){ var S=data.settings||(data.settings={}); S.theme=id; save(); applyTheme(id); renderThemeList(); }
+  function openThemes(){ renderThemeList(); document.getElementById('tmodal').classList.remove('hidden'); }
+  function closeThemes(){ document.getElementById('tmodal').classList.add('hidden'); }
+  window.openThemes=openThemes; window.closeThemes=closeThemes;
+
+  /* ---- Tipps ---- */
+  function renderTips(){
+    var c=document.getElementById('tip-list'); if(!c) return; c.innerHTML='';
+    var mine=data.activities||[];
+    var list=ACTIVITIES.slice().sort(function(a,b){ return (mine.indexOf(b.id)>=0?1:0)-(mine.indexOf(a.id)>=0?1:0); });
+    list.forEach(function(a){
+      var picked=mine.indexOf(a.id)>=0;
+      var d=document.createElement('div'); d.className='goal'; d.style.borderColor=picked?'var(--green)':'var(--line)';
+      d.innerHTML='<h3>'+a.ic+' '+a.name+(picked?' <span style="color:var(--green);font-size:10px">★ deine</span>':'')+'</h3><div class="pts" style="text-transform:none;color:var(--text);margin-top:4px">'+a.tip+'</div>';
+      c.appendChild(d);
+    });
+  }
+  function openTips(){ renderTips(); document.getElementById('tipmodal').classList.remove('hidden'); }
+  function closeTips(){ document.getElementById('tipmodal').classList.add('hidden'); }
+  window.openTips=openTips; window.closeTips=closeTips;
+
+  /* ---- Onboarding & Init ---- */
+  function initEtappe1(){
+    if(!data.unlockedThemes){ data.unlockedThemes=THEMES.filter(function(t){return (data.level||1)>=t.lvl;}).map(function(t){return t.id;}); save(); }
+    applyTheme(currentThemeId());
+    if(!data.onboarded){ setTimeout(openActivities, 400); }
+  }
+
+  /* ================= Etappe 2: Wochen-Challenge ================= */
+  // Sportlich-Balance: Leicht 75 / Mittel 150 / Schwer 300 XP
+  var CHAL_DIFF={ leicht:{inc:1,reward:75,tasks:3,newAct:1}, mittel:{inc:1,reward:150,tasks:4,newAct:2}, schwer:{inc:2,reward:300,tasks:5,newAct:2} };
+  function weekStartTs(){ return startOfWeek(new Date()).getTime(); }
+  function generateChallenge(diff){
+    diff=diff||(data.weeklyChallenge&&data.weeklyChallenge.difficulty)||'mittel';
+    var cfg=CHAL_DIFF[diff]||CHAL_DIFF.mittel;
+    var tasks=[], used=[];
+    (data.goals||[]).forEach(function(g){
+      if(tasks.length>=cfg.tasks) return;
+      var base=(g.weekly&&g.weekly>0)?g.weekly:1;
+      tasks.push({ key:'g'+g.id, kind:'goal', refId:g.id, name:g.name, ic:'🎯', target:base+cfg.inc }); used.push(g.id);
+    });
+    var acts=(data.activities||[]).slice(), added=0;
+    for(var i=0;i<acts.length && tasks.length<cfg.tasks && added<cfg.newAct;i++){
+      var a=activityById(acts[i]); if(!a) continue;
+      tasks.push({ key:'a'+a.id, kind:'activity', refId:a.id, name:a.name, ic:a.ic, target:1+(diff==='schwer'?1:0) }); added++;
+    }
+    if(tasks.length===0){ ['walk','pushups','stairs'].forEach(function(id){ var a=activityById(id); tasks.push({key:'a'+id,kind:'activity',refId:id,name:a.name,ic:a.ic,target:2}); }); }
+    data.weeklyChallenge={ weekKey:weekStartTs(), difficulty:diff, tasks:tasks, reward:cfg.reward, claimed:false };
+    save();
+  }
+  function ensureChallenge(){ if(!data.weeklyChallenge || data.weeklyChallenge.weekKey!==weekStartTs()) generateChallenge(data.weeklyChallenge&&data.weeklyChallenge.difficulty); }
+  function taskProgress(t){
+    var wk=weekStartTs();
+    return (data.completions||[]).filter(function(c){
+      if(new Date(c.date).getTime()<wk) return false;
+      return t.kind==='goal' ? c.goalId===t.refId : c.actId===t.refId;
+    }).length;
+  }
+  function challengeDone(){ var c=data.weeklyChallenge; return !!c && c.tasks.every(function(t){ return taskProgress(t)>=t.target; }); }
+  function checkChallenge(){
+    var c=data.weeklyChallenge; if(!c||c.claimed) return;
+    if(challengeDone()){
+      c.claimed=true; var old=data.level; data.totalXP+=c.reward;
+      var nl=data.level; while(data.totalXP>=xpForLevel(nl+1)) nl++; data.level=nl;
+      save(); render();
+      if(nl>old) showLevelUp(nl); else miniToast('★ Wochenchallenge geschafft: +'+c.reward+' XP!');
+    }
+  }
+  function logActivity(actId){
+    var a=activityById(actId); if(!a) return;
+    var old=data.level, pts=Math.round(a.xp*streakMult());
+    data.totalXP+=pts; data.streak=updateStreak(); data.lastActivity=new Date().toDateString();
+    data.completions.unshift({ id:Date.now(), actId:actId, goalId:null, goalName:a.ic+' '+a.name, points:pts, date:new Date().toISOString() });
+    data.completions=data.completions.slice(0,300);
+    var nl=data.level; while(data.totalXP>=xpForLevel(nl+1)) nl++; data.level=nl;
+    vibrate(30); checkAch(); save(); render();
+    if(nl>old) showLevelUp(nl);
+    checkQuests(); checkChallenge(); checkDailyChallenge();
+  }
+  function challengeTick(key){ var c=data.weeklyChallenge; if(!c) return; var t=c.tasks.filter(function(x){return x.key===key;})[0]; if(!t) return; if(t.kind==='goal') completeGoal(t.refId); else logActivity(t.refId); }
+  function setChallengeDiff(d){ generateChallenge(d); render(); miniToast('Challenge: '+d.charAt(0).toUpperCase()+d.slice(1)+' – Bonus '+(CHAL_DIFF[d]||CHAL_DIFF.mittel).reward+' XP'); }
+  function swapChallengeTask(key){
+    var c=data.weeklyChallenge; if(!c) return;
+    var used=c.tasks.map(function(t){return t.refId;});
+    var pool=(data.activities&&data.activities.length)?data.activities:ACTIVITIES.map(function(a){return a.id;});
+    var cand=pool.filter(function(id){ return used.indexOf(id)<0; });
+    if(!cand.length){ miniToast('Keine weitere Aktivität – wähle mehr unter ⚙ Aktivitäten.'); return; }
+    var a=activityById(cand[Math.floor(Math.random()*cand.length)]); var idx=-1;
+    c.tasks.forEach(function(t,i){ if(t.key===key) idx=i; });
+    if(idx<0) return;
+    c.tasks[idx]={ key:'a'+a.id, kind:'activity', refId:a.id, name:a.name, ic:a.ic, target:c.tasks[idx].target };
+    save(); render();
+  }
+  function renderChallenge(){
+    ensureChallenge();
+    var c=data.weeklyChallenge, el=document.getElementById('challenge'); if(!el) return;
+    var doneCount=c.tasks.filter(function(t){return taskProgress(t)>=t.target;}).length;
+    var diffBtns=['leicht','mittel','schwer'].map(function(d){ return '<button class="pbtn '+(c.difficulty===d?'yellow':'ghost')+'" style="padding:4px 8px;font-size:10px" onclick="setChallengeDiff(\''+d+'\')">'+d.charAt(0).toUpperCase()+d.slice(1)+'</button>'; }).join('');
+    var html='<div class="sec-head"><div class="sec-title gold">Wochen-Challenge</div><div style="display:flex;gap:4px">'+diffBtns+'</div></div>';
+    html+='<div class="panel" style="border-color:var(--yellow)">';
+    html+='<div class="bar-info"><span>'+doneCount+'/'+c.tasks.length+' Aufgaben</span><span style="color:var(--yellow)">Bonus '+c.reward+' XP'+(c.claimed?' ✓':'')+'</span></div>';
+    c.tasks.forEach(function(t){
+      var p=taskProgress(t), pct=Math.min(p/t.target*100,100), full=p>=t.target;
+      html+='<div style="margin:8px 0"><div class="week-info"><span>'+t.ic+' '+esc(t.name)+' '+p+'/'+t.target+(full?' ✓':'')+'</span><span>'
+        +(full?'':'<button class="pbtn green" style="padding:2px 8px;font-size:10px" onclick="challengeTick(\''+t.key+'\')">+1</button> ')
+        +'<button class="pbtn ghost" style="padding:2px 6px;font-size:10px" title="Andere Aktivität" onclick="swapChallengeTask(\''+t.key+'\')">↺</button></span></div>'
+        +'<div class="week-bg"><div class="week-fill" style="width:'+pct+'%;background:'+(full?'var(--green)':'var(--yellow)')+'"></div></div></div>';
+    });
+    if(c.claimed) html+='<div class="hint" style="color:var(--green);text-transform:none">✓ Bonus erhalten! Nächste Woche wartet eine neue Challenge.</div>';
+    else html+='<div class="hint" style="text-transform:none">Schaffe alle Aufgaben diese Woche für den Bonus. „↺" tauscht eine Aktivität, die dir nicht passt.</div>';
+    html+='</div>';
+    el.innerHTML=html;
+  }
+  window.challengeTick=challengeTick; window.setChallengeDiff=setChallengeDiff; window.swapChallengeTask=swapChallengeTask;
+
+  /* ================= Etappe 3: Tages-Motivation (mit Annahme) ================= */
+  function generateDailyChallenge(){
+    var day=new Date(), dayKey=day.toDateString();
+    var doy=Math.floor((day-new Date(day.getFullYear(),0,0))/86400000);
+    var pool=[
+      {type:'steps',target:10000,reward:150,name:'10.000 Schritte gehen'},
+      {type:'steps',target:7500, reward:100,name:'7.500 Schritte gehen'},
+      {type:'steps',target:12000,reward:200,name:'12.000 Schritte gehen'},
+      {type:'steps',target:6000, reward:70, name:'6.000 Schritte gehen'}
+    ];
+    var acts=(data.activities||[]), pick;
+    if(acts.length && doy%3===0){ var a=activityById(acts[doy%acts.length])||activityById(acts[0]); pick={type:'activity',refId:a.id,target:1,reward:80,name:a.ic+' '+a.name+' machen'}; }
+    else { pick=pool[doy%pool.length]; }
+    data.dailyChallenge={ dayKey:dayKey, type:pick.type, refId:pick.refId||null, target:pick.target, reward:pick.reward, name:pick.name, accepted:false, claimed:false, declined:false, notified:false };
+    save();
+  }
+  function ensureDailyChallenge(){ var k=new Date().toDateString(); if(!data.dailyChallenge || data.dailyChallenge.dayKey!==k) generateDailyChallenge(); }
+  function dailyProgress(){
+    var d=data.dailyChallenge; if(!d) return 0;
+    if(d.type==='steps'){ var hs=data.healthSync&&data.healthSync[d.dayKey]; return hs?(hs.steps||0):0; }
+    var k=new Date().toDateString();
+    return (data.completions||[]).filter(function(c){ return c.actId===d.refId && new Date(c.date).toDateString()===k; }).length;
+  }
+  function checkDailyChallenge(){
+    var d=data.dailyChallenge; if(!d||!d.accepted||d.claimed) return;
+    if(dailyProgress()>=d.target){
+      d.claimed=true; var old=data.level; data.totalXP+=d.reward;
+      var nl=data.level; while(data.totalXP>=xpForLevel(nl+1)) nl++; data.level=nl;
+      save(); render();
+      if(nl>old) showLevelUp(nl); else miniToast('★ Tages-Challenge geschafft: +'+d.reward+' XP!');
+    }
+  }
+  function acceptDaily(){ var d=data.dailyChallenge; if(!d) return; d.accepted=true; d.declined=false; save(); render(); checkDailyChallenge(); miniToast('Angenommen: '+d.name+' → '+d.reward+' XP'); }
+  function declineDaily(){ var d=data.dailyChallenge; if(!d) return; d.declined=true; save(); render(); }
+  window.acceptDaily=acceptDaily; window.declineDaily=declineDaily;
+  function renderDaily(){
+    ensureDailyChallenge();
+    var d=data.dailyChallenge, el=document.getElementById('daily'); if(!el) return;
+    if(d.declined && !d.accepted){ el.innerHTML='<div class="sec-title pink" style="margin-bottom:10px">Tages-Motivation</div><div class="empty">Heute abgelehnt. Morgen wartet eine neue Challenge!</div>'; return; }
+    var html='<div class="sec-title pink" style="margin-bottom:10px">Tages-Motivation</div><div class="panel" style="border-color:var(--pink)">';
+    if(!d.accepted){
+      html+='<div class="rt" style="font-size:14px;margin-bottom:10px">'+esc(d.name)+' → <span style="color:var(--yellow)">'+d.reward+' XP</span></div>';
+      html+='<div class="goal-actions"><button class="pbtn green" style="flex:1" onclick="acceptDaily()">Annehmen</button><button class="pbtn ghost" onclick="declineDaily()">Heute nicht</button></div>';
+    } else {
+      var p=dailyProgress(), pct=Math.min(p/d.target*100,100), full=p>=d.target;
+      html+='<div class="week-info"><span>'+esc(d.name)+'</span><span style="color:var(--yellow)">'+d.reward+' XP'+(d.claimed?' ✓':'')+'</span></div>';
+      html+='<div class="week-bg"><div class="week-fill" style="width:'+pct+'%;background:'+(full?'var(--green)':'var(--pink)')+'"></div></div>';
+      html+='<div class="hint" style="text-transform:none;margin-top:6px">'+p+'/'+d.target+(d.type==='steps'?' Schritte':'x')+(d.claimed?' – geschafft!':'')+'</div>';
+    }
+    html+='</div>';
+    el.innerHTML=html;
+  }
+
+  /* ---- Native (Capacitor) Anpassungen ---- */
+  function isNative(){ return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()); }
+  function backupName(){ var d=new Date(); return 'fitness-xp-backup-'+d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)+'.json'; }
+
+  if(isNative()){
+    var P=window.Capacitor.Plugins;
+    // Export: Datei ins Cache schreiben und Teilen-/Speichern-Dialog öffnen
+    window.exportData=function(){
+      var fname=backupName();
+      P.Filesystem.writeFile({ path:fname, data:JSON.stringify(data), directory:'CACHE', encoding:'utf8' })
+        .then(function(res){
+          return P.Share.share({ title:'RespecYou Backup', text:'Dein RespecYou Backup', url:res.uri, dialogTitle:'Backup speichern / teilen' });
+        })
+        .catch(function(e){ if(e&&/cancel/i.test(e.message||'')) return; alert('Backup fehlgeschlagen: '+((e&&e.message)||e)); });
+    };
+    // Import: Datei über Filesystem-Picker wählen (falls verfügbar), sonst bleibt der <input type=file> aktiv
+
+    /* ---- Erinnerungen (Watch spiegelt Handy-Benachrichtigungen automatisch) ---- */
+    var REMINDER_ID=1001, REMINDER_HOUR=19; // täglich 19:00, sofern heute noch nicht trainiert
+    function scheduleReminder(){
+      if(!P.LocalNotifications) return;
+      var now=new Date();
+      var hr=(data.settings&&data.settings.reminderHour!=null)?data.settings.reminderHour:19;
+      var trainedToday=data.completions.some(function(c){ return new Date(c.date).toDateString()===now.toDateString(); });
+      var target=new Date(); target.setHours(hr,0,0,0);
+      if(trainedToday || now>=target){ target.setDate(target.getDate()+1); target.setHours(hr,0,0,0); }
+      var body = data.streak>0
+        ? ('Streak: '+data.streak+' Tage 🔥 – heute dranbleiben und XP sichern!')
+        : 'Zeit fürs Training! Hol dir deine XP 💪';
+      P.LocalNotifications.cancel({ notifications:[{ id:REMINDER_ID }] }).catch(function(){}).then(function(){
+        return P.LocalNotifications.schedule({ notifications:[{
+          id:REMINDER_ID, title:'RespecYou', body:body,
+          schedule:{ at:target, allowWhileIdle:true }
+        }]});
+      }).catch(function(){});
+    }
+    // Tages-Motivation: einmal täglich als Benachrichtigung ankündigen (Annahme erfolgt in der App)
+    var DAILY_NOTIF_ID=1002, DAILY_NOTIF_HOUR=9;
+    function scheduleDailyChallengeNotif(){
+      if(!P.LocalNotifications) return;
+      try{ ensureDailyChallenge(); }catch(e){ return; }
+      var d=data.dailyChallenge; if(!d || d.notified || d.accepted || d.declined) return;
+      var now=new Date(), target=new Date(); target.setHours(DAILY_NOTIF_HOUR,0,0,0);
+      if(now>=target){ target=new Date(now.getTime()+60000); } // heute schon vorbei -> in ~1 Min
+      d.notified=true; save();
+      P.LocalNotifications.cancel({ notifications:[{ id:DAILY_NOTIF_ID }] }).catch(function(){}).then(function(){
+        return P.LocalNotifications.schedule({ notifications:[{
+          id:DAILY_NOTIF_ID, title:'★ Tages-Challenge',
+          body:d.name+' → '+d.reward+' XP. Zum Annehmen App öffnen!',
+          schedule:{ at:target, allowWhileIdle:true }
+        }]});
+      }).catch(function(){});
+    }
+    // Nach jedem Abschluss die Erinnerung neu setzen (heute erledigt -> auf morgen schieben)
+    var _completeGoal=window.completeGoal;
+    window.completeGoal=function(id){ _completeGoal(id); scheduleReminder(); };
+    window.__rescheduleReminder=scheduleReminder;
+    // Bei App-Start und jedem Wiedereintritt aktualisieren
+    if(P.LocalNotifications && P.LocalNotifications.requestPermissions){
+      P.LocalNotifications.requestPermissions().then(function(){ scheduleReminder(); }).catch(function(){ scheduleReminder(); });
+    }
+    /* ---- Phase 2: Auto-XP aus Health Connect (Watch -> Samsung Health -> Health Connect) ---- */
+    window.toast=function(msg){
+      var t=document.createElement('div');
+      t.textContent=msg;
+      t.style.cssText='position:fixed;left:14px;right:14px;bottom:16px;z-index:90;background:var(--panel);color:var(--text);border:3px solid var(--cyan);box-shadow:4px 4px 0 #000;padding:12px 14px;font-size:12px;text-align:center;text-transform:uppercase;letter-spacing:1px;';
+      document.body.appendChild(t);
+      setTimeout(function(){ t.remove(); }, 3400);
+    }
+    function toKcal(e){ var v=(e&&e.value)||0, u=e&&e.unit; if(u==='calories') return v/1000; if(u==='joules') return v/4184; if(u==='kilojoules') return v/4.184; return v; }
+    function shortOrigin(pkg){ if(!pkg) return '?'; if(pkg.indexOf('shealth')>=0) return 'Samsung'; if(pkg.indexOf('healthdata')>=0) return 'HealthConnect'; if(pkg.indexOf('fit')>=0||pkg.indexOf('gms')>=0) return 'GoogleFit'; if(pkg.indexOf('fitbit')>=0) return 'Fitbit'; var p=pkg.split('.'); return p[p.length-1]; }
+    // Gruppiert nach Datenquelle. Samsung Health fusioniert Handy+Watch bereits -> ist maßgeblich.
+    // Sonst größte Einzelquelle statt Summe, um Doppelzählung über mehrere Quellen zu vermeiden.
+    function sumByOrigin(records, valFn){
+      records=records||[]; var by={};
+      records.forEach(function(r){ var o=(r.metadata&&r.metadata.dataOrigin)||'?'; by[o]=(by[o]||0)+(valFn(r)||0); });
+      var total;
+      if(by['com.sec.android.app.shealth']!=null){ total=by['com.sec.android.app.shealth']; }
+      else { total=0; for(var k in by){ if(by[k]>total) total=by[k]; } }
+      return { total:Math.round(total), origins:by };
+    }
+    function applyHealthXP(steps, kcal, interactive, originsNote){
+      if(!data.healthSync) data.healthSync={};
+      var dayKey=new Date().toDateString();
+      var S=data.settings||{};
+      var stepsXP=Math.floor(steps/100)*((S.xpPer100Steps!=null)?S.xpPer100Steps:1);
+      var kcalXP=Math.floor(kcal/10)*((S.xpPer10Kcal!=null)?S.xpPer10Kcal:1);
+      var target=Math.min(stepsXP+kcalXP,(S.dailyCap!=null)?S.dailyCap:200);
+      var prev=data.healthSync[dayKey]||{awardedXP:0};
+      var delta=target-(prev.awardedXP||0);
+      data.healthSync[dayKey]={ steps:steps, kcal:kcal, awardedXP:Math.max(target, prev.awardedXP||0) };
+      if(delta>0){
+        var oldLevel=data.level;
+        data.totalXP+=delta;
+        data.streak=updateStreak();
+        data.lastActivity=new Date().toDateString();
+        var hid='health-'+dayKey;
+        var nm='Aktivität: '+steps+' Schritte'+(kcal>0?(' · '+kcal+' kcal'):'');
+        var existing=data.completions.find(function(c){ return c.healthId===hid; });
+        if(existing){ existing.points=target; existing.goalName=nm; existing.date=new Date().toISOString(); }
+        else { data.completions.unshift({ id:Date.now(), healthId:hid, goalId:null, goalName:nm, points:target, date:new Date().toISOString() }); }
+        var newLevel=data.level; while(data.totalXP>=xpForLevel(newLevel+1)) newLevel++; data.level=newLevel;
+        checkAch(); save(); render();
+        if(newLevel>oldLevel) showLevelUp(newLevel);
+        if(interactive) toast(steps+' Schritte'+(kcal>0?(', '+kcal+' kcal'):'')+' → +'+delta+' XP'+(originsNote||''));
+      } else {
+        save();
+        if(interactive) toast('Schon aktuell: '+steps+' Schritte'+(kcal>0?(', '+kcal+' kcal'):'')+' heute'+(originsNote||''));
+      }
+      checkQuests();
+      try{ checkDailyChallenge(); }catch(e){}
+    }
+    window.syncHealth=async function(opts){
+      opts=opts||{};
+      if(!P.HealthConnect){ if(opts.interactive) alert('Health Connect ist in diesem Build nicht verfügbar.'); return; }
+      try{
+        var avail=await P.HealthConnect.checkAvailability();
+        if(avail.availability!=='Available'){
+          if(opts.interactive) alert('Health Connect ist nicht verfügbar ('+avail.availability+').');
+          return;
+        }
+        var read=['Steps','ActiveCaloriesBurned'];
+        var perm=await P.HealthConnect.checkHealthPermissions({ read:read, write:[] });
+        if(!perm.hasAllPermissions){
+          if(!opts.interactive) return;              // im Hintergrund nicht nachfragen
+          perm=await P.HealthConnect.requestHealthPermissions({ read:read, write:[] });
+          if(!perm.hasAllPermissions){ alert('Ohne Freigabe in Health Connect kann ich keine Aktivität lesen.'); return; }
+        }
+        var start=new Date(); start.setHours(0,0,0,0);
+        var filter={ type:'between', startTime:start, endTime:new Date() };
+        var steps=0, kcal=0, stepOrigins={};
+        try{ var sr=await P.HealthConnect.readRecords({ type:'Steps', timeRangeFilter:filter });
+          var sres=sumByOrigin(sr.records, function(r){ return r.count||0; });
+          steps=sres.total; stepOrigins=sres.origins; }catch(e){}
+        try{ var cr=await P.HealthConnect.readRecords({ type:'ActiveCaloriesBurned', timeRangeFilter:filter });
+          kcal=Math.round(sumByOrigin(cr.records, function(r){ return toKcal(r.energy); }).total); }catch(e){}
+        // Diagnose: bei mehr als einer Schritt-Quelle die Aufschlüsselung zeigen (deckt Doppelzählung auf)
+        var oNames=Object.keys(stepOrigins), originsNote='';
+        try{ console.log('FITXP-STEPS gesamt='+steps+' Quellen='+JSON.stringify(stepOrigins)); }catch(e){}
+        if(oNames.length>1){ originsNote=' | Quellen: '+oNames.map(function(n){ return shortOrigin(n)+' '+stepOrigins[n]; }).join(', '); }
+        applyHealthXP(steps, kcal, opts.interactive, originsNote);
+      }catch(e){ if(opts.interactive) alert('Health-Sync Fehler: '+((e&&e.message)||e)); }
+    };
+    /* ---- Etappe 1: Datensicherheit ---- */
+    // Wiederherstellung: falls der WebView-Speicher geleert wurde, aus Preferences zurückholen
+    function recoverData(){
+      return new Promise(function(resolve){
+        try{
+          if(!P.Preferences){ resolve(); return; }
+          var localEmpty=(!data.goals||!data.goals.length)&&(!data.completions||!data.completions.length)&&!data.totalXP;
+          if(!localEmpty){ resolve(); return; }
+          P.Preferences.get({ key:'fitnessXP' }).then(function(r){
+            try{
+              if(r&&r.value){
+                var pref=JSON.parse(r.value);
+                if(pref&&((pref.totalXP||0)>0||(pref.completions&&pref.completions.length)||(pref.goals&&pref.goals.length))){
+                  data=pref; localStorage.setItem('fitnessXP', r.value); render(); toast('Daten wiederhergestellt');
+                }
+              }
+            }catch(e){}
+            resolve();
+          }).catch(function(){ resolve(); });
+        }catch(e){ resolve(); }
+      });
+    }
+    // Tägliches Datei-Backup (persistente Kopie in Dokumente)
+    function autoBackup(){
+      try{
+        if(!P.Filesystem) return;
+        var dayKey=new Date().toDateString();
+        if(data.__bkpDay===dayKey) return;
+        data.__bkpDay=dayKey;
+        try{ localStorage.setItem('fitnessXP', JSON.stringify(data)); }catch(e){}
+        P.Filesystem.writeFile({ path:'fitness-xp-autobackup.json', data:JSON.stringify(data), directory:'DOCUMENTS', encoding:'utf8' }).catch(function(){});
+      }catch(e){}
+    }
+
+    /* ================= Etappe 4: Update-Funktion (GitHub Releases) ================= */
+    var UPDATE_REPO='KhaosDE/RespecYou';
+    var updateInfo=null;
+    if(P.App && P.App.getInfo){ P.App.getInfo().then(function(i){ window.__appVersion=i.version+' ('+i.build+')'; }).catch(function(){}); }
+    function cmpVersion(a,b){ var pa=String(a).split('.').map(function(n){return parseInt(n,10)||0;}), pb=String(b).split('.').map(function(n){return parseInt(n,10)||0;}); for(var i=0;i<Math.max(pa.length,pb.length);i++){ var x=pa[i]||0,y=pb[i]||0; if(x>y)return 1; if(x<y)return -1;} return 0; }
+    function backupBeforeUpdate(){
+      return new Promise(function(resolve){
+        try{ try{ localStorage.setItem('fitnessXP', JSON.stringify(data)); }catch(e){}
+          if(P.Filesystem){ P.Filesystem.writeFile({ path:'respecyou-pre-update-backup.json', data:JSON.stringify(data), directory:'DOCUMENTS', encoding:'utf8' }).then(function(){resolve();}).catch(function(){resolve();}); }
+          else resolve();
+        }catch(e){ resolve(); }
+      });
+    }
+    window.checkForUpdate=async function(interactive){
+      try{
+        var info={version:'1.0'};
+        try{ if(P.App&&P.App.getInfo) info=await P.App.getInfo(); }catch(e){}
+        var res=await fetch('https://api.github.com/repos/'+UPDATE_REPO+'/releases/latest',{headers:{'Accept':'application/vnd.github+json'}});
+        if(res.status===404){ if(interactive) miniToast('Noch keine Version veröffentlicht.'); return; }
+        if(!res.ok){ if(interactive) miniToast('Update-Prüfung fehlgeschlagen ('+res.status+').'); return; }
+        var rel=await res.json();
+        var latest=String(rel.tag_name||'').replace(/^v/i,'').trim();
+        var cur=String(info.version||'1.0');
+        if(cmpVersion(latest,cur)>0){
+          var apk=(rel.assets||[]).filter(function(a){return /\.apk$/i.test(a.name);})[0];
+          updateInfo={ version:latest, url:(apk?apk.browser_download_url:rel.html_url), notes:(rel.body||'') };
+          showUpdateModal();
+        } else { if(interactive) miniToast('Du bist aktuell (v'+cur+') 🎉'); }
+      }catch(e){ if(interactive) miniToast('Update-Prüfung nicht möglich (offline?).'); }
+    };
+    function showUpdateModal(){
+      if(!updateInfo) return;
+      var v=document.getElementById('u-version'); if(v) v.textContent='Neue Version: '+updateInfo.version;
+      var n=document.getElementById('u-notes'); if(n) n.textContent=updateInfo.notes||'Verbesserungen & neue Funktionen.';
+      document.getElementById('umodal').classList.remove('hidden');
+    }
+    window.closeUpdate=function(){ document.getElementById('umodal').classList.add('hidden'); };
+    window.startUpdate=async function(){
+      if(!updateInfo) return;
+      miniToast('Sichere deine Daten…');
+      await backupBeforeUpdate();
+      try{ if(P.Browser&&P.Browser.open){ await P.Browser.open({ url:updateInfo.url }); } else { window.open(updateInfo.url,'_blank'); } }
+      catch(e){ window.open(updateInfo.url,'_blank'); }
+      window.closeUpdate();
+    };
+
+    // Sync-Button anzeigen
+    var hb=document.getElementById('btn-health'); if(hb) hb.classList.remove('hidden');
+    // Start-Ablauf: setTimeout(0) stellt sicher, dass load()/render() bereits gelaufen sind
+    setTimeout(function(){
+      recoverData().then(function(){ autoBackup(); if(P.HealthConnect) syncHealth({interactive:false}); scheduleDailyChallengeNotif(); checkForUpdate(false); });
+    }, 0);
+    // Bei App-Rückkehr: Erinnerung aktualisieren, Backup + still synchronisieren
+    if(P.App && P.App.addListener){ P.App.addListener('resume', function(){ scheduleReminder(); scheduleDailyChallengeNotif(); autoBackup(); if(P.HealthConnect) syncHealth({interactive:false}); checkForUpdate(false); }); }
+  }
+
+  if(!window.checkForUpdate){ window.checkForUpdate=function(i){ if(i) alert('Update-Prüfung ist nur in der App verfügbar.'); }; }
+  load();
+  render();
+  initEtappe1();
+
+  if('serviceWorker' in navigator && !isNative()){
+    window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+  }
+</script>
+</body>
+</html>
