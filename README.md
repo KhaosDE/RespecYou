@@ -22,7 +22,7 @@ Die meisten Fitness-Apps scheitern nicht an fehlenden Funktionen, sondern daran,
 - **Aktivitäten-Katalog** mit über 25 Vorschlägen in 6 Kategorien – als Zusatzquelle für die Wochenchallenge, nicht als Zwang
 - **Wochenchallenge & Tages-Motivation** mit wählbarem Schwierigkeitsgrad
 - **Achievements** für Meilensteine, einzelne Aktivitäten, Serien und mehr
-- **Khaos**, dein Begleiter: ein kleines Pixelmonster, das mit deinem Level sichtbar wächst (alle 10 Level eine neue Form) und dessen Aussehen du ab bestimmten Leveln frei wählen kannst – dein Fortschritt bleibt dabei immer erhalten
+- **Khaos**, dein Begleiter: ein flauschiges Pixelmonster, das mit deinem Level sichtbar wächst (alle 10 Level eine neue Form). Männlich oder weiblich wählbar, vier Farben schalten sich mit dem Level frei – dein Fortschritt bleibt dabei immer erhalten
 - **Perks**: Streak-Freeze (rettet eine verpasste Serie), Doppel-XP-Tage, eine "Legendär"-Challenge-Stufe
 - **Erinnerungen je Ziel**: Uhrzeit und Wochentage pro Ziel, Khaos meldet sich nur, wenn das Ziel heute noch offen ist (Android-App; Smartwatches spiegeln die Benachrichtigung)
 - **Eigene Belohnungen**, die du dir selbst bei bestimmten Leveln setzt
