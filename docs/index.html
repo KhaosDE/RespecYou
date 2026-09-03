@@ -166,10 +166,21 @@
   .companion{ text-align:center; margin:0 0 14px; }
   .comp-box{ display:inline-flex; align-items:center; justify-content:center; padding:10px; background:var(--screen); border:4px solid var(--cyan); box-shadow:4px 4px 0 #000; cursor:pointer; transition:transform .15s; }
   .comp-box:active{ transform:scale(.94); }
-  .pxl{ display:grid; gap:1px; }
+  .pxl{ display:grid; gap:0; transform-origin:50% 100%; }
   .pxl i{ display:block; }
+  .pxl .ko{ background:var(--ko); } .pxl .kb{ background:var(--kb); } .pxl .kd{ background:var(--kd); } .pxl .kl{ background:var(--kl); }
+  .pxl .kh{ background:var(--kh); } .pxl .ke{ background:var(--ke); } .pxl .kp{ background:var(--kp); } .pxl .kt{ background:var(--kt); } .pxl .ka{ background:var(--ka); }
+  /* Idle: leichtes Atmen; Blinzeln = Augenpixel kurz in Körperfarbe; hop = XP, joy = Level-Up */
+  .comp-box .pxl{ animation:kbreathe 3.2s ease-in-out infinite; }
+  .comp-box.blink .pxl .ke,.comp-box.blink .pxl .kp{ background:var(--kb); }
+  .comp-box.hop .pxl{ animation:khop .55s cubic-bezier(.3,1.4,.5,1); }
+  .comp-box.joy .pxl{ animation:kjoy 1.3s ease-in-out; }
+  @keyframes kbreathe{ 0%,100%{ transform:scale(1,1); } 50%{ transform:scale(1.02,.97); } }
+  @keyframes khop{ 0%{ transform:translateY(0) scale(1,1); } 20%{ transform:translateY(2px) scale(1.06,.9); } 55%{ transform:translateY(-9px) scale(.96,1.06); } 100%{ transform:translateY(0) scale(1,1); } }
+  @keyframes kjoy{ 0%,100%{ transform:translateY(0) rotate(0); } 15%{ transform:translateY(-10px) rotate(-6deg); } 30%{ transform:translateY(0) rotate(0); } 45%{ transform:translateY(-12px) rotate(6deg); } 60%{ transform:translateY(0) rotate(0); } 75%{ transform:translateY(-6px) scale(1.08); } }
+  @media (prefers-reduced-motion:reduce){ .comp-box .pxl{ animation:none !important; } }
   .comp-box.stage3,.comp-box.stage4,.comp-box.stage5{ border-color:var(--yellow); box-shadow:4px 4px 0 #000,0 0 12px var(--yellow); }
-  .comp-box.stage3 .pxl,.comp-box.stage4 .pxl,.comp-box.stage5 .pxl{ animation:complow 1.6s ease-in-out infinite; }
+  .comp-box.stage3 .pxl,.comp-box.stage4 .pxl,.comp-box.stage5 .pxl{ animation:kbreathe 3.2s ease-in-out infinite, complow 1.6s ease-in-out infinite; }
   @keyframes complow{ 0%,100%{ filter:drop-shadow(0 0 2px var(--yellow)); } 50%{ filter:drop-shadow(0 0 8px var(--yellow)); } }
   .comp-name{ margin-top:6px; font-size:11px; letter-spacing:2px; color:var(--dim); }
   .lvl-rank{ font-size:11px; letter-spacing:2px; color:var(--yellow); margin-top:2px; }
@@ -654,6 +665,7 @@
     vibrate([120,60,120,60,220]);
     if(luTimer) clearTimeout(luTimer);
     luTimer=setTimeout(function(){ b.classList.add('hidden'); },1800);
+    setTimeout(function(){ companionReact('joy'); },0);
     try{ checkThemeUnlocks(n); }catch(e){}
   }
 
@@ -1276,6 +1288,7 @@
     }
     checkAch();
     if(nl>old) showLevelUp(nl);
+    else if(amount>0) setTimeout(function(){ companionReact('hop'); },0);
     return { amount:amount, leveledUp:nl>old };
   }
 
@@ -1317,61 +1330,188 @@
   function rankForLevel(l){ var cur=RANKS[0]; RANKS.forEach(function(r){ if(l>=r.lvl) cur=r; }); return cur; }
 
   /* ---- Wachsender Begleiter "Khaos" (Wachstum an dieselben Level-Gates wie THEMES gekoppelt) ---- */
-  // Pixelraster: b=Körper, h=Horn/Deko, e=Auge, .=leer. Gleiche Form für alle Wachstumsstufen,
-  // damit erkennbar derselbe Charakter bleibt - nur Größe/Glow ändert sich mit dem Level.
-  // Jede Wachstumsstufe hat eine EIGENE Form (schlanker, Arme/Beine, größere Hörner) statt nur
-  // Größe zu ändern. `rows` = Standard-Hörner, `bowRows` = Khaosia-Variante (Schleife statt Hörner),
-  // beide pro Stufe gleich breit/hoch, damit das Pixelraster nicht verrutscht.
+  // Jede Wachstumsstufe hat eine eigene Silhouette (Winzling -> Arme/Beine -> aufrecht -> Zähne/Schwanz
+  // -> Flügel -> Rüstung). `top` = Hörner, `bowTop` = Khaosia-Schleife (gleiche Zeilenzahl/Breite),
+  // `body` = Rumpf; Zeilen mit Armen/Flügeln als [links, Rumpf, rechts], damit das Raster nicht verrutscht.
+  /* Zeichen: . leer | o Umriss | b Basis | d Schatten | l Licht | h Horn/Deko | e Augenweiß | p Pupille | t Zahn | a Rüstung
+     top/bowTop = Kopfschmuck (Hörner bzw. Schleife), body = Rumpf. Bei Stufen mit Armen/Flügeln: [links, Rumpf, rechts]. */
   var COMPANION=[
-    {lvl:1,  name:'Winzling', cell:4, flavor:'Khaos ist gerade erst geschlüpft – klein, aber neugierig.',
-      rows:[ "..h...h..","..bbbbb..",".bbbbbbb.","bbbbbbbbb","bbebbbebb","bbbbbbbbb",".bbbbbbb.","..b...b..","........." ],
-      bowRows:[ "...hhh...","..bbbbb..",".bbbbbbb.","bbbbbbbbb","bbebbbebb","bbbbbbbbb",".bbbbbbb.","..b...b..","........." ]
-    },
-    {lvl:10, name:'Wächst', cell:5, flavor:'Er bekommt Arme und Beine – die Reise beginnt.',
-      rows:[ ".hh.....hh.","...bbbbb...","..bbbbbbb..",".bbbbbbbbb.","b.bebbbeb.b","bbbbbbbbbbb",".bbbbbbbbb.","..b.....b..","..........." ],
-      bowRows:[ "..hhhhhhh..","...bbbbb...","..bbbbbbb..",".bbbbbbbbb.","b.bebbbeb.b","bbbbbbbbbbb",".bbbbbbbbb.","..b.....b..","..........." ]
-    },
-    {lvl:20, name:'Kräftig', cell:6, flavor:'Kräftiger und schlanker – man sieht deinen Fortschritt.',
-      rows:[ ".hh.......hh.","....bbbbb....","...bbbbbbb...","..bbbbbbbbb..","bbbbbbbbbbbbb","bbbebbbbbebbb","bbbbbbbbbbbbb",".bbbbbbbbbbb.","..bb.....bb..","............." ],
-      bowRows:[ "...hhhhhhh...","....bbbbb....","...bbbbbbb...","..bbbbbbbbb..","bbbbbbbbbbbbb","bbbebbbbbebbb","bbbbbbbbbbbbb",".bbbbbbbbbbb.","..bb.....bb..","............." ]
-    },
-    {lvl:30, name:'Stark', cell:7, flavor:'Die Hörner werden sichtbar cooler. Stark und treu an deiner Seite.',
-      rows:[ ".hhh.....hhh.","....bbbbb....","...bbbbbbb...","..bbbbbbbbb..","bbbbbbbbbbbbb","bbbebbbbbebbb","bbbbbbbbbbbbb",".bbbbbbbbbbb.","..bb.....bb..","............." ],
-      bowRows:[ "..hhhhhhhhh..","....bbbbb....","...bbbbbbb...","..bbbbbbbbb..","bbbbbbbbbbbbb","bbbebbbbbebbb","bbbbbbbbbbbbb",".bbbbbbbbbbb.","..bb.....bb..","............." ]
-    },
-    {lvl:40, name:'Mächtig', cell:8, flavor:'Mächtig, mit imposanten Hörnern – kaum wiederzuerkennen.',
-      rows:[ ".h.........h.",".hhh.....hhh.","....bbbbb....","...bbbbbbb...","..bbbbbbbbb..","bbbbbbbbbbbbb","bbbebbbbbebbb","bbbbbbbbbbbbb",".bbbbbbbbbbb.","..bb.....bb..","............." ],
-      bowRows:[ "....hhh......","..hhhhhhhhh..","....bbbbb....","...bbbbbbb...","..bbbbbbbbb..","bbbbbbbbbbbbb","bbbebbbbbebbb","bbbbbbbbbbbbb",".bbbbbbbbbbb.","..bb.....bb..","............." ]
-    },
-    {lvl:50, name:'Kampfbestie', cell:10, flavor:'Die Kampfbestie ist erwacht. Genau wie du.',
-      rows:[ "..h.......h..","hhh.......hhh","....bbbbb....","...bbbbbbb...","..bbbbbbbbb..","bbbbbbbbbbbbb","bbbebbbbbebbb","bbbbbbbbbbbbb",".bbbbbbbbbbb.","bb.........bb","............." ],
-      bowRows:[ "....hhh......","hhhhhhhhhhhhh","....bbbbb....","...bbbbbbb...","..bbbbbbbbb..","bbbbbbbbbbbbb","bbbebbbbbebbb","bbbbbbbbbbbbb",".bbbbbbbbbbb.","bb.........bb","............." ]
-    }
+   {lvl:1, name:'Winzling', cell:6, flavor:'Khaos ist gerade erst geschlüpft – klein, aber neugierig.',
+  top:[ "...h..h...",
+        "..oh..ho.." ],
+  bowTop:[ "..hh..hh..",
+           ".ohhhhhho." ],
+  body:[ "..oooooo..",
+         ".obllbbbo.",
+         "obllbbbbdo",
+         "obepbbepdo",
+         "obbbbbbbdo",
+         "obbboobbdo",
+         ".oddddddo.",
+         "..oooooo..",
+         "..oo..oo.." ]},
+   {lvl:10, name:'Wächst', cell:6, flavor:'Er bekommt Arme und Beine – die Reise beginnt.',
+  top:[ ".h........h.",
+        ".oh..oo..ho." ],
+  bowTop:[ "...hh.hh....",
+           "..ohhhhhho.." ],
+  body:[ [".","..oooooo..","."],
+         [".",".obllbbbo.","."],
+         [".","obllbbbbdo","."],
+         [".","obepbbepdo","."],
+         ["o","obbbbbbbdo","o"],
+         ["b","obbboobbdo","b"],
+         ["o","obbbbbbbdo","o"],
+         [".",".oddddddo.","."],
+         [".","..oooooo..","."],
+         [".","..oo..oo..","."],
+         [".","..oo..oo..","."] ]},
+   {lvl:20, name:'Kräftig', cell:5, flavor:'Kräftiger und aufrechter – man sieht deinen Fortschritt.',
+  top:[ ".hh..........hh.",
+        ".ohh...oo...hho." ],
+  bowTop:[ "....hh.h.hh.....",
+           "...ohhhhhhho...." ],
+  body:[ ["..","...oooooo...",".."],
+         ["..","..obllbbbo..",".."],
+         ["..","obllbbbbbbdo",".."],
+         ["..","obllbbbbbbdo",".."],
+         ["..","obepbbbepbdo",".."],
+         ["..","obbbbbbbbbdo",".."],
+         ["..","obbboooobbdo",".."],
+         ["oo","obbbbbbbbbdo","oo"],
+         ["ob","obbbllbbbbdo","bo"],
+         ["oo","obbbllbbbbdo","oo"],
+         ["..","obbbbbbbbbdo",".."],
+         ["..",".oddddddddo.",".."],
+         ["..","..oooooooo..",".."],
+         ["..","..oo....oo..",".."],
+         ["..","..oo....oo..",".."] ]},
+   {lvl:30, name:'Stark', cell:5, flavor:'Die Hörner werden sichtbar cooler. Stark und treu an deiner Seite.',
+  top:[ ".hh............hh.",
+        "ohhh..........hhho",
+        ".ohh...oooo...hho." ],
+  bowTop:[ "....hh..hh..hh....",
+           "...ohhhhhhhhhho...",
+           "....ohh....hho...." ],
+  body:[ ["..","....oooooo....",".."],
+         ["..","..obllbbbbbo..",".."],
+         ["..",".obllbbbbbbdo.",".."],
+         ["..","obllbbbbbbbbdo",".."],
+         ["..","obepbbbbepbbdo",".."],
+         ["..","obbbbbbbbbbbdo",".."],
+         ["..","obbotbbbbtobdo",".."],
+         ["..","obbboooooobbdo",".."],
+         ["oo","obbbbbbbbbbbdo","oo"],
+         ["ob","obbbbllbbbbbdo","bo"],
+         ["od","obbbbllbbbbbdo","do"],
+         ["oo","obbbbbbbbbbbdo","oo"],
+         ["..","obbbbbbbbbbbdo",".."],
+         ["..",".oddddddddddo.",".."],
+         ["..","..oooooooooo..",".."],
+         ["..","...oo....oo...",".."],
+         ["..","...oo....oo...",".."] ]},
+   {lvl:40, name:'Mächtig', cell:5, flavor:'Flügel! Mächtig, mit imposanten Hörnern – kaum wiederzuerkennen.',
+  top:[ "....hh............hh....",
+        "...ohhh..........hhho...",
+        "....ohh....oo....hho....",
+        ".....oh...oooo...ho....." ],
+  bowTop:[ ".......hh...hh...hh.....",
+           "......ohhhhhhhhhhho.....",
+           ".......ohhh....hhho.....",
+           "........oh......ho......" ],
+  body:[ [".....","....oooooo....","....."],
+         [".....","..obllbbbbbo..","....."],
+         [".....",".obllbbbbbbdo.","....."],
+         [".....","obllbbbbbbbbdo","....."],
+         [".....","obepbbbbepbbdo","....."],
+         [".....","obbbbbbbbbbbdo","....."],
+         [".....","obbotbbbbtobdo","....."],
+         ["o....","obbboooooobbdo","....o"],
+         ["oo...","obbbbbbbbbbbdo","...oo"],
+         ["odo..","obbbbllbbbbbdo","..odo"],
+         ["oddo.","obbbbllbbbbbdo",".oddo"],
+         ["odddo","obbbbbbbbbbbdo","odddo"],
+         [".oooo","obbbbbbbbbbbdo","oooo."],
+         [".....","oddddddddddddo","bo..."],
+         [".....","..oooooooooo..",".oh.."],
+         [".....","...oo....oo...","....."],
+         [".....","...oo....oo...","....."] ]},
+   {lvl:50, name:'Kampfbestie', cell:5, flavor:'Die Kampfbestie ist erwacht – gepanzert und mit Flügeln. Genau wie du.',
+  top:[ "....hh..............hh....",
+        "...ohhh............hhho...",
+        "....ohhh..........hhho....",
+        ".....ohh...oooo...hho.....",
+        "......oh..oooooo..ho......" ],
+  bowTop:[ ".......hh....hh....hh.....",
+           "......ohhhhhhhhhhhhho.....",
+           "........ohhh....hhho......",
+           ".........oh......ho.......",
+           "..........o......o........" ],
+  body:[ [".....",".....oooooo.....","....."],
+         [".....","...obllbbbbbo...","....."],
+         [".....","..obllbbbbbbbo..","....."],
+         [".....",".obllbbbbbbbbdo.","....."],
+         [".....","obllbbbbbbbbbbdo","....."],
+         [".....","obeepbbbbbeepbdo","....."],
+         [".....","obbbbbbbbbbbbbdo","....."],
+         [".....","obbotbbbbbbtobdo","....."],
+         [".....","obbboooooooobbdo","....."],
+         ["o....","obbbbbbbbbbbbbdo","....o"],
+         ["oo...","obbboaaaaaobbbdo","...oo"],
+         ["odo..","obboaaallaaaobdo","..odo"],
+         ["oddo.","obboaaaaaaaaobdo",".oddo"],
+         ["odddo","obbboaaaaaaobbdo","odddo"],
+         [".oooo","obbbboooooobbbdo","oooo."],
+         [".....","oddddddddddddddo","bo..."],
+         [".....",".oooooooooooooo.",".oh.."],
+         [".....","...oo......oo...","....."],
+         [".....","...oo......oo...","....."] ]}
   ];
   var COMPANION_SKINS=[
-    {id:'khaos',   name:'Khaos',      unlockLvl:1,  bow:false, colors:{b:'var(--purple)', h:'var(--pink)', e:'var(--yellow)'}},
-    {id:'khaosia', name:'Khaosia',    unlockLvl:10, bow:true,  colors:{b:'#ff9fd6',        h:'#ff5fa2',      e:'var(--yellow)'}},
-    {id:'frost',   name:'Frostkhaos', unlockLvl:15, bow:false, colors:{b:'var(--cyan)',    h:'#e8fbff',      e:'#0b2530'}},
-    {id:'ember',   name:'Flammkhaos', unlockLvl:20, bow:false, colors:{b:'var(--orange)',  h:'#ffe08a',      e:'#3a1400'}}
+   {id:'khaos',   name:'Khaos',      unlockLvl:1,  bow:false, colors:{o:'#241540', b:'#b388ff', d:'#7d5fd1', l:'#dcccff', h:'#ff5fa2', e:'#ffffff', p:'#1a1024', t:'#ffffff', a:'#9aa6b8'}},
+   {id:'khaosia', name:'Khaosia',    unlockLvl:10, bow:true,  colors:{o:'#3d1230', b:'#ff9fd6', d:'#d66aa8', l:'#ffd6ee', h:'#ff3d8f', e:'#ffffff', p:'#1a1024', t:'#ffffff', a:'#9aa6b8'}},
+   {id:'frost',   name:'Frostkhaos', unlockLvl:15, bow:false, colors:{o:'#072027', b:'#2ce8f5', d:'#159cab', l:'#c8fbff', h:'#eafcff', e:'#ffffff', p:'#072027', t:'#ffffff', a:'#8aa0b5'}},
+   {id:'ember',   name:'Flammkhaos', unlockLvl:20, bow:false, colors:{o:'#2e0e00', b:'#ff8c42', d:'#c95a17', l:'#ffc79a', h:'#ffe08a', e:'#ffffff', p:'#2e0e00', t:'#ffffff', a:'#7f7a72'}}
   ];
   function skinById(id){ return COMPANION_SKINS.filter(function(s){return s.id===id;})[0]||COMPANION_SKINS[0]; }
-  function companionStageIdx(){ var idx=0; COMPANION.forEach(function(s,i){ if((data.level||1)>=s.lvl) idx=i; }); return idx; }
-  function pixelSprite(rows, colors, cell){
-    var w=rows[0].length, html='<div class="pxl" style="grid-template-columns:repeat('+w+',1fr);width:'+(w*cell)+'px;height:'+(rows.length*cell)+'px">';
-    rows.forEach(function(row){
-      for(var i=0;i<row.length;i++){
-        var ch=row[i], col=(ch==='b')?colors.b:(ch==='h')?colors.h:(ch==='e')?colors.e:'transparent';
-        html+='<i style="background:'+col+'"></i>';
-      }
-    });
-    return html+'</div>';
+  function companionStageIdx(){ var idx=0; COMPANION.forEach(function(st,i){ if((data.level||1)>=st.lvl) idx=i; }); return idx; }
+  function companionRows(stage, skin){
+  var top=skin.bow?stage.bowTop:stage.top;
+  var body=stage.body.map(function(r){ return typeof r==='string'?r:r.join(''); });
+  return top.concat(body);
   }
-  function companionRows(stage, skin){ return skin.bow ? stage.bowRows : stage.rows; }
+  var PX_KEYS='obdlhept a'.replace(' ','').split('');
+  function pixelSprite(rows, colors, cell){
+  var w=rows[0].length, css='';
+  PX_KEYS.forEach(function(k){ css+='--k'+k+':'+colors[k]+';'; });
+  var html='<div class="pxl" style="'+css+'grid-template-columns:repeat('+w+',1fr);width:'+(w*cell)+'px;height:'+(rows.length*cell)+'px">';
+  rows.forEach(function(row){
+    for(var i=0;i<row.length;i++){ var ch=row[i]; html+=(ch==='.')?'<i></i>':'<i class="k'+ch+'"></i>'; }
+  });
+  return html+'</div>';
+  }
+  var compReact=null, compReactTimer=null;
+  function companionReact(kind){
+    // 'hop' = XP gewonnen, 'joy' = Level-Up. Wird nach dem nächsten Render auf die Box gesetzt.
+    compReact=kind;
+    var box=document.querySelector('#companion .comp-box'); if(!box) return;
+    box.classList.remove('hop','joy'); void box.offsetWidth; box.classList.add(kind);
+    if(compReactTimer) clearTimeout(compReactTimer);
+    compReactTimer=setTimeout(function(){ var bx=document.querySelector('#companion .comp-box'); if(bx) bx.classList.remove('hop','joy'); compReact=null; }, kind==='joy'?1400:600);
+  }
   function renderCompanion(){
     var el=document.getElementById('companion'); if(!el) return;
     var idx=companionStageIdx(), stage=COMPANION[idx], skin=skinById(data.companionSkin);
-    el.innerHTML='<div class="comp-box stage'+idx+'" onclick="openCompanionInfo()">'+pixelSprite(companionRows(stage,skin),skin.colors,stage.cell)+'</div><div class="comp-name">'+esc(skin.name)+' · '+esc(stage.name)+'</div>';
+    el.innerHTML='<div class="comp-box stage'+idx+(compReact?' '+compReact:'')+'" onclick="openCompanionInfo()">'+pixelSprite(companionRows(stage,skin),skin.colors,stage.cell)+'</div><div class="comp-name">'+esc(skin.name)+' · '+esc(stage.name)+'</div>';
   }
+  // Blinzeln: alle 3-6 s kurz die Augen schließen (Augenpixel nehmen die Körperfarbe an)
+  (function blinkLoop(){
+    setTimeout(function(){
+      var box=document.querySelector('#companion .comp-box');
+      if(box && !document.hidden){ box.classList.add('blink'); setTimeout(function(){ box.classList.remove('blink'); },140); }
+      blinkLoop();
+    }, 3000+Math.random()*3000);
+  })();
   function checkCompanionEvolution(level){
     var idx=companionStageIdx();
     if(idx>(data.companionStage||0)){
@@ -1397,14 +1537,16 @@
       var active=data.companionSkin===s.id;
       var d=document.createElement('div'); d.className='reward';
       d.style.cssText='opacity:'+(unlocked?1:.55)+';cursor:'+(unlocked?'pointer':'default')+';border-color:'+(active?'var(--green)':'var(--line)');
-      d.innerHTML='<div><div class="rt">'+esc(s.name)+'</div></div><div class="rstate" style="color:'+(active?'var(--green)':'var(--dim)')+'">'+(active?'✓ AKTIV':(unlocked?'WÄHLEN':('🔒 Lvl '+s.unlockLvl)))+'</div>';
+      var stage=COMPANION[companionStageIdx()], mini=pixelSprite(companionRows(stage,s),s.colors,2);
+      d.innerHTML='<div style="display:flex;align-items:center;gap:10px">'+mini+'<div class="rt">'+esc(s.name)+'</div></div><div class="rstate" style="color:'+(active?'var(--green)':'var(--dim)')+'">'+(active?'✓ AKTIV':(unlocked?'WÄHLEN':('🔒 Lvl '+s.unlockLvl)))+'</div>';
       if(unlocked) d.onclick=function(id){ return function(){ data.companionSkin=id; save(); renderCompanion(); openCompanionInfo(); }; }(s.id);
       el.appendChild(d);
     });
   }
   function openCompanionInfo(){
     var idx=companionStageIdx(), stage=COMPANION[idx], skin=skinById(data.companionSkin);
-    var sp=document.getElementById('comp-info-sprite'); if(sp) sp.innerHTML=pixelSprite(companionRows(stage,skin),skin.colors,8);
+    var rows=companionRows(stage,skin), cell=Math.max(4,Math.min(8,Math.floor(180/rows[0].length)));
+    var sp=document.getElementById('comp-info-sprite'); if(sp) sp.innerHTML=pixelSprite(rows,skin.colors,cell);
     var nm=document.getElementById('comp-info-name'); if(nm) nm.textContent=skin.name+' · '+stage.name;
     var fl=document.getElementById('comp-info-flavor'); if(fl) fl.textContent=stage.flavor;
     renderSkinPicker();
