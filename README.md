@@ -24,6 +24,7 @@ Die meisten Fitness-Apps scheitern nicht an fehlenden Funktionen, sondern daran,
 - **Achievements** für Meilensteine, einzelne Aktivitäten, Serien und mehr
 - **Khaos**, dein Begleiter: ein kleines Pixelmonster, das mit deinem Level sichtbar wächst (alle 10 Level eine neue Form) und dessen Aussehen du ab bestimmten Leveln frei wählen kannst – dein Fortschritt bleibt dabei immer erhalten
 - **Perks**: Streak-Freeze (rettet eine verpasste Serie), Doppel-XP-Tage, eine "Legendär"-Challenge-Stufe
+- **Erinnerungen je Ziel**: Uhrzeit und Wochentage pro Ziel, Khaos meldet sich nur, wenn das Ziel heute noch offen ist (Android-App; Smartwatches spiegeln die Benachrichtigung)
 - **Eigene Belohnungen**, die du dir selbst bei bestimmten Leveln setzt
 - **Themes**: mehrere freischaltbare Farbdarstellungen im Retro-Terminal-Look
 - **Automatischer XP-Gewinn aus echten Aktivitätsdaten** – auf Android über Health Connect (Handy/Watch/Samsung Health), auf iPhone über eine leichtgewichtige Bridge, die Schritte/Kalorien aus der Health-App abholt (siehe unten)

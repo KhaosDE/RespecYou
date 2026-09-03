@@ -294,6 +294,18 @@
     <div class="hint">Wie oft pro Woche? Zeigt einen Wochen-Fortschritt.</div>
     <label>Farbe</label>
     <div class="colors" id="colors"></div>
+    <label>Erinnerung</label>
+    <div class="colors" style="grid-template-columns:1fr 1fr;margin-bottom:8px">
+      <button class="pbtn ghost" id="g-rem-on" onclick="selRem=true;renderRemBtns()">AN</button>
+      <button class="pbtn green" id="g-rem-off" onclick="selRem=false;renderRemBtns()">AUS</button>
+    </div>
+    <div id="g-rem-box" class="hidden">
+      <label>Uhrzeit</label>
+      <input type="time" id="g-rem-time" value="19:00">
+      <label>Tage</label>
+      <div class="colors" id="g-rem-days" style="grid-template-columns:repeat(7,1fr);gap:4px"></div>
+    </div>
+    <div class="hint" id="g-rem-hint" style="margin-top:0">Khaos meldet sich zur gewählten Zeit, auch auf der Smartwatch, wenn sie Handy-Benachrichtigungen spiegelt. Ist das Ziel heute schon erledigt, bleibt es still.</div>
     <div class="modal-actions">
       <button class="pbtn cyan" id="modal-save" style="flex:1" onclick="saveGoal()">Erstellen</button>
       <button class="pbtn ghost" onclick="closeModal()">Abbruch</button>
@@ -364,9 +376,8 @@
     <div id="perks-box"></div>
 
     <div class="sec-title" style="font-size:13px;margin:12px 0 6px">Erinnerungen</div>
-    <label>Tägliche Erinnerung – Uhrzeit (0–23)</label>
-    <input type="number" id="set-hour" min="0" max="23" value="19">
-    <label style="margin-top:10px">Benachrichtigungen von Khaos</label>
+    <div class="hint" style="margin:0 0 10px;text-transform:none">Erinnerungen legst du je Ziel fest: Ziel anlegen oder mit ✎ bearbeiten, dort Uhrzeit und Tage wählen. Hier schaltest du alle Benachrichtigungen von Khaos ein oder aus.</div>
+    <label>Benachrichtigungen von Khaos</label>
     <div class="colors" style="grid-template-columns:1fr 1fr;margin-bottom:4px">
       <button class="pbtn green" id="set-notif-on" onclick="selNotif=true;renderNotifBtns()">AN</button>
       <button class="pbtn ghost" id="set-notif-off" onclick="selNotif=false;renderNotifBtns()">AUS</button>
@@ -488,6 +499,34 @@
   var COLORS=['#2ce8f5','#ff5fa2','#ffd93b','#3ddc84','#b388ff','#ff8c42'];
   var selColor=COLORS[0];
   var editingId=null;
+  var selRem=false, selRemDays=[1,2,3,4,5];
+  var DAY_SHORT=['So','Mo','Di','Mi','Do','Fr','Sa'];
+  function remDaysLabel(days){
+    days=(days||[]).slice().sort();
+    if(days.length===7) return 'täglich';
+    if(days.join()==='1,2,3,4,5') return 'Mo–Fr';
+    if(days.join()==='0,6') return 'Sa+So';
+    return [1,2,3,4,5,6,0].filter(function(d){return days.indexOf(d)>=0;}).map(function(d){return DAY_SHORT[d];}).join(' ');
+  }
+  function renderRemBtns(){
+    var on=document.getElementById('g-rem-on'), off=document.getElementById('g-rem-off'), box=document.getElementById('g-rem-box');
+    if(!on||!off||!box) return;
+    on.className='pbtn '+(selRem?'green':'ghost'); off.className='pbtn '+(selRem?'ghost':'green');
+    box.classList.toggle('hidden', !selRem);
+    var hint=document.getElementById('g-rem-hint');
+    if(hint) hint.textContent = isNative()
+      ? 'Khaos meldet sich zur gewählten Zeit, auch auf der Smartwatch, wenn sie Handy-Benachrichtigungen spiegelt. Ist das Ziel heute schon erledigt, bleibt es still.'
+      : 'Erinnerungen funktionieren nur in der Android-App. Die Web-App auf dem iPhone kann keine geplanten Benachrichtigungen senden. Deine Einstellung wird trotzdem gespeichert.';
+  }
+  function renderRemDays(){
+    var el=document.getElementById('g-rem-days'); if(!el) return; el.innerHTML='';
+    [1,2,3,4,5,6,0].forEach(function(d){
+      var b=document.createElement('button'); b.type='button';
+      b.className='pbtn '+(selRemDays.indexOf(d)>=0?'green':'ghost'); b.style.padding='6px 0'; b.style.fontSize='10px'; b.textContent=DAY_SHORT[d];
+      b.onclick=function(){ var i=selRemDays.indexOf(d); if(i>=0) selRemDays.splice(i,1); else selRemDays.push(d); renderRemDays(); };
+      el.appendChild(b);
+    });
+  }
 
   var data={ goals:[], totalXP:0, level:1, streak:0, lastActivity:null, completions:[], achievements:[], rewards:[] };
 
@@ -495,7 +534,7 @@
     if(!data.rewards) data.rewards=[];
     if(!data.settings) data.settings={};
     var S=data.settings;
-    if(S.reminderHour==null) S.reminderHour=19;
+    if(S.reminderHour!=null) delete S.reminderHour; // alte globale Erinnerung -> jetzt je Ziel
     if(S.xpPer100Steps==null) S.xpPer100Steps=1;
     if(S.xpPer10Kcal==null) S.xpPer10Kcal=1;
     if(S.dailyCap==null) S.dailyCap=200;
@@ -508,7 +547,8 @@
     if(!data.questClaims) data.questClaims={};
     if(!data.perks) data.perks={freezeCount:0,boostCharges:0};
     if(!data.stats) data.stats={weeklyClaims:0,dailyClaims:0};
-    if(data.companionStage==null) data.companionStage=0; }
+    if(data.companionStage==null) data.companionStage=0;
+    var maxN=0; (data.goals||[]).forEach(function(g){ if(g.nid&&g.nid>maxN) maxN=g.nid; }); (data.goals||[]).forEach(function(g){ if(!g.nid) g.nid=++maxN; }); }
   function save(){ try{ localStorage.setItem('fitnessXP', JSON.stringify(data)); }catch(e){}
     try{ if(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.Preferences){ Capacitor.Plugins.Preferences.set({ key:'fitnessXP', value:JSON.stringify(data) }); } }catch(e){} }
 
@@ -571,7 +611,6 @@
   function renderNotifBtns(){ var on=document.getElementById('set-notif-on'), off=document.getElementById('set-notif-off'); if(!on||!off) return; on.className='pbtn '+(selNotif?'green':'ghost'); off.className='pbtn '+(selNotif?'ghost':'red'); }
   function openSettings(){
     var S=data.settings||{};
-    document.getElementById('set-hour').value=(S.reminderHour!=null?S.reminderHour:19);
     document.getElementById('set-steps').value=(S.xpPer100Steps!=null?S.xpPer100Steps:1);
     document.getElementById('set-kcal').value=(S.xpPer10Kcal!=null?S.xpPer10Kcal:1);
     document.getElementById('set-cap').value=(S.dailyCap!=null?S.dailyCap:200);
@@ -602,7 +641,6 @@
   window.sendFeedback=sendFeedback;
   function saveSettings(){
     var S=data.settings||(data.settings={});
-    var h=parseInt(document.getElementById('set-hour').value); S.reminderHour=(isNaN(h)?19:Math.max(0,Math.min(23,h)));
     var st=parseFloat(document.getElementById('set-steps').value); S.xpPer100Steps=(isNaN(st)?1:st);
     var kc=parseFloat(document.getElementById('set-kcal').value); S.xpPer10Kcal=(isNaN(kc)?1:kc);
     var cp=parseInt(document.getElementById('set-cap').value); S.dailyCap=(isNaN(cp)?200:cp);
@@ -709,7 +747,7 @@
     if(totalSteps>=1000000) add('steps1m','1.000.000 Schritte','🌍');
   }
 
-  function deleteGoal(id){ if(confirm('Ziel wirklich löschen?')){ data.goals=data.goals.filter(function(g){return g.id!==id;}); save(); render(); } }
+  function deleteGoal(id){ if(confirm('Ziel wirklich löschen?')){ data.goals=data.goals.filter(function(g){return g.id!==id;}); save(); render(); try{ if(window.__rescheduleReminder) window.__rescheduleReminder(); }catch(e){} } }
 
   function openCreate(){
     editingId=null;
@@ -719,6 +757,7 @@
     document.getElementById('g-points').value='10';
     document.getElementById('g-weekly').value='0';
     selColor=COLORS[0]; renderColors();
+    selRem=false; selRemDays=[1,2,3,4,5]; document.getElementById('g-rem-time').value='19:00'; renderRemBtns(); renderRemDays();
     document.getElementById('modal').classList.remove('hidden');
   }
   function openEdit(id){
@@ -730,6 +769,7 @@
     document.getElementById('g-points').value=g.points;
     document.getElementById('g-weekly').value=g.weekly||0;
     selColor=g.color; renderColors();
+    var r=g.reminder||{}; selRem=!!r.on; selRemDays=(r.days||[1,2,3,4,5]).slice(); document.getElementById('g-rem-time').value=r.time||'19:00'; renderRemBtns(); renderRemDays();
     document.getElementById('modal').classList.remove('hidden');
   }
   function closeModal(){ document.getElementById('modal').classList.add('hidden'); }
@@ -739,10 +779,17 @@
     var pts=parseInt(document.getElementById('g-points').value)||10;
     var wk=parseInt(document.getElementById('g-weekly').value)||0;
     if(!name){ alert('Bitte gib einen Namen ein!'); return; }
+    var remTime=document.getElementById('g-rem-time').value||'19:00';
+    if(selRem && !selRemDays.length){ alert('Bitte mindestens einen Tag für die Erinnerung wählen.'); return; }
+    var reminder={ on:selRem, time:remTime, days:selRemDays.slice().sort() };
     if(editingId){ var g=data.goals.find(function(x){return x.id===editingId;});
-      if(g){ g.name=name; g.points=pts; g.weekly=wk; g.color=selColor; } }
-    else { data.goals.push({ id:Date.now(), name:name, points:pts, weekly:wk, color:selColor }); }
+      if(g){ g.name=name; g.points=pts; g.weekly=wk; g.color=selColor; g.reminder=reminder; } }
+    else {
+      var maxN=0; data.goals.forEach(function(x){ if(x.nid&&x.nid>maxN) maxN=x.nid; });
+      data.goals.push({ id:Date.now(), nid:maxN+1, name:name, points:pts, weekly:wk, color:selColor, reminder:reminder });
+    }
     save(); closeModal(); render();
+    try{ if(window.__rescheduleReminder) window.__rescheduleReminder(); }catch(e){}
   }
 
   function renderColors(){
@@ -896,7 +943,8 @@
           weekHtml='<div class="week"><div class="week-info"><span>Woche: '+done+'/'+g.weekly+(reached?' ✓':'')+'</span></div>'+
             '<div class="week-bg"><div class="week-fill" style="width:'+pct+'%;background:'+(reached?'var(--green)':g.color)+'"></div></div></div>';
         }
-        d.innerHTML='<div class="row"><div><h3>'+esc(g.name)+'</h3><div class="pts">+'+g.points+' XP</div></div>'+
+        var remHtml=(g.reminder&&g.reminder.on)?'<div class="pts" style="color:var(--dim)">⏰ '+esc(g.reminder.time||'')+' · '+remDaysLabel(g.reminder.days)+'</div>':'';
+        d.innerHTML='<div class="row"><div><h3>'+esc(g.name)+'</h3><div class="pts">+'+g.points+' XP</div>'+remHtml+'</div>'+
           '<div class="goal-actions"><button class="pbtn green">Done</button><button class="pbtn blue">✎</button><button class="pbtn red">✕</button></div></div>'+weekHtml;
         var btns=d.querySelectorAll('button');
         btns[0].onclick=function(){ completeGoal(g.id); };
@@ -1614,24 +1662,33 @@
     };
     // Import: Datei über Filesystem-Picker wählen (falls verfügbar), sonst bleibt der <input type=file> aktiv
 
-    /* ---- Erinnerungen (Watch spiegelt Handy-Benachrichtigungen automatisch) ---- */
-    var REMINDER_ID=1001, REMINDER_HOUR=19; // täglich 19:00, sofern heute noch nicht trainiert
+    /* ---- Erinnerungen je Ziel (Watch spiegelt Handy-Benachrichtigungen automatisch) ----
+       Pro Ziel: Uhrzeit + Wochentage. Geplant werden Einzeltermine für die nächsten REM_DAYS Tage
+       (bei jedem App-Start/Resume/Abschluss neu), damit ein heute schon erledigtes Ziel still bleibt. */
+    var LEGACY_REMINDER_ID=1001, REM_BASE=20000, REM_DAYS=14;
+    function goalDoneToday(goalId){ var t=new Date().toDateString(); return data.completions.some(function(c){ return c.goalId===goalId && new Date(c.date).toDateString()===t; }); }
     function scheduleReminder(){
       if(!P.LocalNotifications) return;
-      if(data.settings && data.settings.notificationsEnabled===false){ P.LocalNotifications.cancel({ notifications:[{ id:REMINDER_ID }] }).catch(function(){}); return; }
-      var now=new Date();
-      var hr=(data.settings&&data.settings.reminderHour!=null)?data.settings.reminderHour:19;
-      var trainedToday=data.completions.some(function(c){ return new Date(c.date).toDateString()===now.toDateString(); });
-      var target=new Date(); target.setHours(hr,0,0,0);
-      if(trainedToday || now>=target){ target.setDate(target.getDate()+1); target.setHours(hr,0,0,0); }
-      var body = data.streak>0
-        ? ('Deine Serie steht bei '+data.streak+' Tagen 🔥 – lass uns die heute nicht abreißen lassen!')
-        : 'Hey, hier ist Khaos – Zeit für ein bisschen Bewegung? Ich wachse mit jedem XP mit 💪';
-      P.LocalNotifications.cancel({ notifications:[{ id:REMINDER_ID }] }).catch(function(){}).then(function(){
-        return P.LocalNotifications.schedule({ notifications:[{
-          id:REMINDER_ID, title:'🐲 Khaos meldet sich', body:body,
-          schedule:{ at:target, allowWhileIdle:true }
-        }]});
+      var LN=P.LocalNotifications;
+      var enabled=!(data.settings && data.settings.notificationsEnabled===false);
+      LN.getPending().catch(function(){ return {notifications:[]}; }).then(function(res){
+        var old=(res&&res.notifications||[]).filter(function(n){ return n.id===LEGACY_REMINDER_ID || n.id>=REM_BASE; }).map(function(n){ return {id:n.id}; });
+        return old.length ? LN.cancel({ notifications:old }).catch(function(){}) : null;
+      }).then(function(){
+        if(!enabled) return;
+        var now=new Date(), list=[];
+        data.goals.forEach(function(g){
+          var r=g.reminder; if(!r||!r.on||!r.days||!r.days.length||!g.nid) return;
+          var hm=String(r.time||'19:00').split(':'), h=parseInt(hm[0],10)||0, m=parseInt(hm[1],10)||0;
+          for(var i=0;i<REM_DAYS;i++){
+            var d=new Date(now.getFullYear(),now.getMonth(),now.getDate()+i,h,m,0,0);
+            if(r.days.indexOf(d.getDay())<0 || d<=now) continue;
+            if(i===0 && goalDoneToday(g.id)) continue;
+            list.push({ id:REM_BASE+g.nid*REM_DAYS+i, title:'🐲 Khaos erinnert dich', body:g.name+' – heute noch? +'+g.points+' XP',
+              schedule:{ at:d, allowWhileIdle:true } });
+          }
+        });
+        if(list.length) return LN.schedule({ notifications:list });
       }).catch(function(){});
     }
     // Tages-Motivation: einmal täglich als Benachrichtigung ankündigen (Annahme erfolgt in der App)
