@@ -155,15 +155,15 @@ def d(base,**k): x=dict(base); x.update(k); return x
 STAGES=[
  dict(lvl=1,  name='Winzling',    cell=6, W=19,H=23,cx=9,  body_top=4, body_h=16, rx=6.2, horns=d(HORN_S,y=1,dx=2), eyes_y=9,  eye=EYE3, legs=d(LEG_S,y=20), seed=3,
       flavor='Khaos ist gerade erst geschlüpft – ein Fellknäuel mit Hörnchen.'),
- dict(lvl=10, name='Wächst',      cell=6, W=21,H=27,cx=10, body_top=4, body_h=19, rx=6.4, horns=d(HORN_M,y=0,dx=2), eyes_y=10, eye=EYE3, arms={'m':d(ARM_MS,y=14,dx=6),'f':d(ARM_FS,y=15,dx=5)}, legs=d(LEG_S,y=23), muscles=1, seed=5,
+ dict(lvl=10, name='Wächst',      cell=6, W=21,H=27,cx=10, body_top=4, body_h=19, rx=6.4, horns=d(HORN_M,y=0,dx=2), eyes_y=10, eye=EYE3, arms={'m':d(ARM_MS,y=14,dx=5),'f':d(ARM_FS,y=15,dx=5)}, legs=d(LEG_S,y=23), muscles=1, seed=5,
       flavor='Er streckt sich, bekommt Arme und Beine – die Reise beginnt.'),
- dict(lvl=20, name='Kräftig',     cell=5, W=27,H=33,cx=13, body_top=5, body_h=23, rx=7.6, horns=d(HORN_M,y=1,dx=3), eyes_y=12, eye=EYE4, arms={'m':d(ARM_ML,y=17,dx=8),'f':d(ARM_FL,y=18,dx=5)}, legs=d(LEG_M,y=28), tail=d(TAIL,y=24,dx=7), muscles=2, seed=7,
+ dict(lvl=20, name='Kräftig',     cell=5, W=27,H=33,cx=13, body_top=5, body_h=23, rx=7.6, horns=d(HORN_M,y=1,dx=3), eyes_y=12, eye=EYE4, arms={'m':d(ARM_ML,y=17,dx=6),'f':d(ARM_FL,y=18,dx=5)}, legs=d(LEG_M,y=28), tail=d(TAIL,y=24,dx=5), muscles=2, seed=7,
       flavor='Schlanker, aufrechter, mit Schwanz – man sieht deinen Fortschritt.'),
- dict(lvl=30, name='Stark',       cell=5, W=29,H=35,cx=14, body_top=6, body_h=24, rx=8.0, horns=d(HORN_L,y=1,dx=3), eyes_y=13, eye=EYE4, arms={'m':d(ARM_ML,y=18,dx=9),'f':d(ARM_FL,y=19,dx=6)}, legs=d(LEG_M,y=30), tail=d(TAIL,y=25,dx=8), mane=True, teeth=True, muscles=2, seed=11,
+ dict(lvl=30, name='Stark',       cell=5, W=29,H=35,cx=14, body_top=6, body_h=24, rx=8.0, horns=d(HORN_L,y=1,dx=3), eyes_y=13, eye=EYE4, arms={'m':d(ARM_ML,y=18,dx=7),'f':d(ARM_FL,y=19,dx=6)}, legs=d(LEG_M,y=30), tail=d(TAIL,y=25,dx=6), mane=True, teeth=True, muscles=2, seed=11,
       flavor='Fellkragen, Zähne, größere Hörner. Stark und treu an deiner Seite.'),
- dict(lvl=40, name='Mächtig',     cell=5, W=31,H=37,cx=15, body_top=7, body_h=25, rx=8.2, horns=d(HORN_L,y=2,dx=3), eyes_y=14, eye=EYE4, arms={'m':d(ARM_ML,y=19,dx=9),'f':d(ARM_FL,y=20,dx=6)}, legs=d(LEG_M,y=32), tail=d(TAIL,y=26,dx=8), wings=d(WING_M,y=13,dx=10), mane=True, teeth=True, muscles=2, seed=13,
+ dict(lvl=40, name='Mächtig',     cell=5, W=31,H=37,cx=15, body_top=7, body_h=25, rx=8.2, horns=d(HORN_L,y=2,dx=3), eyes_y=14, eye=EYE4, arms={'m':d(ARM_ML,y=19,dx=7),'f':d(ARM_FL,y=20,dx=6)}, legs=d(LEG_M,y=32), tail=d(TAIL,y=26,dx=6), wings=d(WING_M,y=13,dx=10), mane=True, teeth=True, muscles=2, seed=13,
       flavor='Flügel im Fell – mächtig und kaum wiederzuerkennen.'),
- dict(lvl=50, name='Kampfbestie', cell=5, W=33,H=39,cx=16, body_top=8, body_h=26, rx=8.4, horns=d(HORN_XL,y=2,dx=3), eyes_y=15, eye=EYE4W, arms={'m':d(ARM_ML,y=20,dx=10),'f':d(ARM_FL,y=21,dx=7)}, legs=d(LEG_M,y=34), tail=d(TAIL,y=27,dx=8), wings=d(WING_L,y=12,dx=10), mane=True, teeth=True, armor=True, muscles=2, seed=17,
+ dict(lvl=50, name='Kampfbestie', cell=5, W=33,H=39,cx=16, body_top=8, body_h=26, rx=8.4, horns=d(HORN_XL,y=2,dx=3), eyes_y=15, eye=EYE4W, arms={'m':d(ARM_ML,y=20,dx=8),'f':d(ARM_FL,y=21,dx=7)}, legs=d(LEG_M,y=34), tail=d(TAIL,y=27,dx=6), wings=d(WING_L,y=12,dx=10), mane=True, teeth=True, armor=True, muscles=2, seed=17,
       flavor='Die Kampfbestie ist erwacht – gepanzert, geflügelt, flauschig. Genau wie du.'),
 ]
 
