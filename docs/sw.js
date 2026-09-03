@@ -1,4 +1,4 @@
-const CACHE = 'respecyou-v3';
+const CACHE = 'respecyou-v4';
 const SHELL = [
   './',
   './index.html',

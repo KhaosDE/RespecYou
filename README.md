@@ -44,6 +44,7 @@ Eine einzige HTML-Datei (`www/index.html`) als Basis, plattformspezifisch erweit
 - Android-Build über [Capacitor](https://capacitorjs.com/)
 - iOS/Web über eine eigenständige PWA (Manifest, Service Worker, iOS-Icons) im `docs/`-Ordner, gehostet via GitHub Pages
 - Daten bleiben lokal auf dem Gerät (`localStorage`), keine Cloud-Anbindung außer der optionalen iPhone-Bridge
+- Khaos-Sprites werden mit `tools/khaos_gen.py` erzeugt (schlanke, flauschige Pixelfigur in 6 Stufen); Ausgabe wird in `docs/index.html` eingesetzt
 
 ## Support
 
