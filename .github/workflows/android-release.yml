@@ -1,0 +1,122 @@
+# Baut das signierte Android-APK und haengt es an das Release.
+#
+# Ausgeloest durch einen Versions-Tag (z.B. "1.5") oder von Hand ueber "Run workflow".
+# Erwartet das Capacitor-Projekt unter app/ und vier Repository-Secrets fuer die Signatur,
+# siehe docs/ANDROID-BUILD.md.
+name: Android Release
+
+on:
+  push:
+    tags: ['[0-9]+.[0-9]+*', 'v[0-9]+.[0-9]+*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versionsnummer, z.B. 1.5'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Voraussetzungen pruefen
+        run: |
+          if [ ! -f app/package.json ]; then
+            echo "::error::app/package.json fehlt. Das Capacitor-Projekt muss unter app/ liegen – siehe docs/ANDROID-BUILD.md."
+            exit 1
+          fi
+          for s in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
+            eval "v=\${$s}"
+            if [ -z "$v" ]; then echo "::error::Secret $s ist nicht gesetzt – siehe docs/ANDROID-BUILD.md."; exit 1; fi
+          done
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Version bestimmen
+        id: ver
+        run: |
+          V="${{ github.event.inputs.version }}"
+          if [ -z "$V" ]; then V="${GITHUB_REF_NAME#v}"; fi
+          IFS='.' read -r MA MI PA <<< "$V"
+          CODE=$(( ${MA:-0} * 10000 + ${MI:-0} * 100 + ${PA:-0} ))
+          echo "name=$V"   >> "$GITHUB_OUTPUT"
+          echo "code=$CODE" >> "$GITHUB_OUTPUT"
+          echo "Version $V, versionCode $CODE"
+
+      - name: Web-Fassung bauen und uebernehmen
+        run: |
+          python3 tools/build.py
+          rm -rf app/www
+          mkdir -p app/www
+          cp -r dist/android/www/. app/www/
+
+      - name: Version in build.gradle setzen
+        working-directory: app/android/app
+        run: |
+          sed -i "s/versionName \"[^\"]*\"/versionName \"${{ steps.ver.outputs.name }}\"/" build.gradle
+          sed -i "s/versionCode [0-9]\+/versionCode ${{ steps.ver.outputs.code }}/" build.gradle
+          grep -nE 'versionName|versionCode' build.gradle
+
+      - name: Abhaengigkeiten und Sync
+        working-directory: app
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+          npx cap sync android
+
+      - name: Keystore bereitstellen
+        run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/respecyou.jks"
+
+      - name: Signiertes APK bauen
+        working-directory: app/android
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleRelease \
+            -Pandroid.injected.signing.store.file="$RUNNER_TEMP/respecyou.jks" \
+            -Pandroid.injected.signing.store.password='${{ secrets.ANDROID_KEYSTORE_PASSWORD }}' \
+            -Pandroid.injected.signing.key.alias='${{ secrets.ANDROID_KEY_ALIAS }}' \
+            -Pandroid.injected.signing.key.password='${{ secrets.ANDROID_KEY_PASSWORD }}'
+
+      - name: Keystore loeschen
+        if: always()
+        run: rm -f "$RUNNER_TEMP/respecyou.jks"
+
+      - name: APK benennen
+        id: apk
+        run: |
+          SRC=$(find app/android/app/build/outputs/apk/release -name '*.apk' | head -1)
+          if [ -z "$SRC" ]; then echo "::error::Kein APK gefunden."; exit 1; fi
+          DST="RespecYou-v${{ steps.ver.outputs.name }}.apk"
+          cp "$SRC" "$DST"
+          ls -la "$DST"
+          echo "path=$DST" >> "$GITHUB_OUTPUT"
+
+      - name: APK als Artefakt ablegen
+        uses: actions/upload-artifact@v4
+        with:
+          name: RespecYou-v${{ steps.ver.outputs.name }}
+          path: ${{ steps.apk.outputs.path }}
+          retention-days: 30
+
+      - name: An das Release anhaengen
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.apk.outputs.path }}
