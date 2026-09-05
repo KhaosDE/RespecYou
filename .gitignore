@@ -1,2 +1,13 @@
 __pycache__/
 *.pyc
+
+# Capacitor / Android
+app/node_modules/
+app/www/
+app/android/build/
+app/android/app/build/
+app/android/.gradle/
+app/android/local.properties
+app/android/app/src/main/assets/public/
+*.jks
+*.keystore
