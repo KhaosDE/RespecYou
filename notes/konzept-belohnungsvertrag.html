@@ -1,0 +1,112 @@
+<title>Der Belohnungsvertrag</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+:root{
+  --bg:#f4f2ee; --panel:#e9e5dd; --ink:#1b1a17; --muted:#655f54; --line:#d0c9bc;
+  --gold:#8a6a12; --green:#1d7f47; --red:#a8402f; --cyan:#106b78;
+  --ok-bg:#dcefe2; --warn-bg:#f3e9d2; --bad-bg:#f3ddd8;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#14130f; --panel:#201e18; --ink:#eae6dc; --muted:#a09889; --line:#38342a;
+  --gold:#ffd93b; --green:#3ddc84; --red:#ff7b6b; --cyan:#2ce8f5;
+  --ok-bg:#1b3526; --warn-bg:#3a3113; --bad-bg:#3c1e19; } }
+:root[data-theme="dark"]{
+  --bg:#14130f; --panel:#201e18; --ink:#eae6dc; --muted:#a09889; --line:#38342a;
+  --gold:#ffd93b; --green:#3ddc84; --red:#ff7b6b; --cyan:#2ce8f5;
+  --ok-bg:#1b3526; --warn-bg:#3a3113; --bad-bg:#3c1e19; }
+body{ background:var(--bg); color:var(--ink); font:16px/1.55 "IBM Plex Sans",system-ui,sans-serif; margin:0; }
+main{ max-width:70ch; margin:0 auto; padding:40px 20px 80px; }
+h1{ font-family:"IBM Plex Mono",monospace; font-size:32px; font-weight:600; line-height:1.15; margin:0 0 8px; text-wrap:balance; }
+h2{ font-family:"IBM Plex Mono",monospace; font-size:18px; font-weight:600; margin:46px 0 12px; text-wrap:balance;
+    padding-bottom:6px; border-bottom:2px solid var(--line); }
+h3{ font-family:"IBM Plex Mono",monospace; font-size:14.5px; font-weight:600; margin:24px 0 6px; color:var(--muted);
+    letter-spacing:.04em; text-transform:uppercase; }
+p{ margin:0 0 12px; }
+.eyebrow{ font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin:0 0 14px; }
+.thesis{ border-left:5px solid var(--gold); background:var(--panel); padding:18px 20px; margin:24px 0 8px; }
+.thesis .claim{ font-family:"IBM Plex Mono",monospace; font-size:21px; line-height:1.3; font-weight:600; margin:0 0 10px; text-wrap:balance; }
+.thesis p:last-child{ margin:0; }
+table{ border-collapse:collapse; width:100%; font-size:14.5px; margin:8px 0 14px; }
+th,td{ text-align:left; vertical-align:top; padding:9px 10px; border-bottom:1px solid var(--line); }
+th{ font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:600; }
+.tbl{ overflow-x:auto; }
+.pill{ display:inline-block; font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.05em; padding:2px 8px; border-radius:3px; white-space:nowrap; }
+.pill.ok{ background:var(--ok-bg); color:var(--green); } .pill.warn{ background:var(--warn-bg); color:var(--gold); } .pill.bad{ background:var(--bad-bg); color:var(--red); }
+ul,ol{ padding-left:22px; margin:0 0 12px; } li{ margin:0 0 8px; }
+.note{ color:var(--muted); font-size:14px; }
+.steps{ list-style:none; padding:0; margin:8px 0 14px; counter-reset:s; }
+.steps li{ counter-increment:s; display:grid; grid-template-columns:30px 1fr; gap:12px; padding:11px 0; border-bottom:1px solid var(--line); margin:0; }
+.steps li::before{ content:counter(s); font-family:"IBM Plex Mono",monospace; font-weight:600; color:var(--gold); font-size:15px; padding-top:1px; }
+.steps b{ display:block; }
+.obj{ background:var(--panel); padding:14px 16px; margin:0 0 12px; border-left:3px solid var(--line); }
+.obj .q{ font-weight:600; margin:0 0 6px; }
+.obj p:last-child{ margin:0; }
+a{ color:var(--cyan); }
+.foot{ margin-top:40px; padding-top:14px; border-top:2px solid var(--line); font-size:14px; color:var(--muted); }
+</style>
+<main>
+<p class="eyebrow">Konzept v2 · 5. September 2026 · ersetzt Abschnitt 3 und 5 des Konzept-Checks</p>
+<h1>Der Belohnungsvertrag</h1>
+<p class="note">Diese Fassung legt das Alleinstellungsmerkmal fest und beschreibt, was es für das Produkt bedeutet. Der <b>Konzept-Check v1</b> bleibt gültig für Marktzahlen, Wettbewerb, Preismodell und Steuerfragen – er wird nicht ersetzt, nur an dieser einen Stelle überschrieben.</p>
+
+<div class="thesis">
+  <p class="claim">Versprich dir was. Zieh es durch. Hol es dir.</p>
+  <p>RespecYou ist die App, in der du dir selbst etwas Echtes zusagst – und die dich beim Wort nimmt. Nicht Abzeichen, nicht ein glückliches Haustier: eine Belohnung, die du dir vorher aufgeschrieben hast und die du dir am Ende wirklich holst.</p>
+</div>
+
+<h2>1. Warum die anderen Kandidaten nicht tragen</h2>
+<p>Fünf Dinge unterscheiden RespecYou vom Rest. Vier davon halten einer Prüfung nicht stand.</p>
+<div class="tbl"><table>
+<tr><th>Kandidat</th><th>Urteil</th><th>Warum</th></tr>
+<tr><td>Begleiter, der mitwächst</td><td><span class="pill bad">besetzt</span></td><td>Finch macht das mit einem Team und Millionenumsatz, dazu Motion, DigiBuddy, FitPets. Auf Produktionswert ist das nicht zu gewinnen.</td></tr>
+<tr><td>Daten bleiben lokal</td><td><span class="pill warn">Hygiene</span></td><td>Beruhigt, verkauft aber nicht. Niemand lädt eine Motivations-App wegen Datenschutz herunter.</td></tr>
+<tr><td>Bindeglied statt Tracker</td><td><span class="pill warn">Strategie</span></td><td>Hält aus dem Kampf mit Strava und Apple heraus – aber kein gefühlter Schmerz. Der Nutzer denkt „ich mache es nicht“, nicht „meine Apps reden nicht miteinander“.</td></tr>
+<tr><td>Deutsch, Retro-Terminal</td><td><span class="pill warn">Marke</span></td><td>Echte Abgrenzung im Regal voller englischer Pastell-Apps, hilft beim Gefundenwerden. Aber Optik ist kein Grund.</td></tr>
+<tr><td>Selbst gesetzte echte Belohnungen</td><td><span class="pill ok">trägt</span></td><td>Keine vergleichbare App hat das als Kernmechanik. Und es ist keine Feature-Lücke, sondern eine Kategorie-Lücke.</td></tr>
+</table></div>
+
+<h2>2. Die Kategorie-Lücke</h2>
+<p>Gewohnheits-Apps setzen darauf, dass die Belohnung im Kopf entsteht: Serie, Abzeichen, ein zufriedenes Haustier. Selbstverpflichtungs-Apps gibt es auch – aber sie arbeiten alle mit Strafe. StickK und Beeminder nehmen dir Geld ab, wenn du versagst. Das ist englischsprachig, nischig und fühlt sich unangenehm an.</p>
+<p>Dazwischen liegt nichts. Eine <b>belohnungsbasierte Selbstverpflichtung, auf Deutsch, ohne Konto</b>, existiert nicht. Das ist die Position, die RespecYou besetzen kann – und der Grund, warum jemand die App braucht, statt sich nur eine Notiz zu machen: Die App macht den Handel explizit, hält den Aufschub aus und führt Buch darüber.</p>
+
+<h2>3. Was das Rückgrat konkret heißt</h2>
+<p>Ein Alleinstellungsmerkmal ist erst eines, wenn es die App trägt statt ein Menüpunkt zu sein. Diese sechs Änderungen sind in der Testvariante gebaut:</p>
+<ol class="steps">
+  <li><div><b>Der Einstieg ist umgedreht</b>Erste Frage ist nicht „Welches Ziel?“, sondern „Was gönnst du dir, wenn du es durchziehst?“ Erst danach: „Was musst du dafür tun?“ Aus beidem entstehen die erste Belohnung und das erste Ziel. <span class="pill ok">gebaut</span></div></li>
+  <li><div><b>Der Startbildschirm führt mit dem Versprechen</b>Ganz oben steht entweder eine verdiente, noch nicht abgeholte Belohnung – oder das nächste Versprechen mit Fortschrittsbalken und den fehlenden XP. Level und XP sind die Mechanik dahinter, nicht die Überschrift. <span class="pill ok">gebaut</span></div></li>
+  <li><div><b>Einlösen ist ein Moment</b>Bestätigen, Datum wird gesetzt, Khaos freut sich, die Belohnung wandert ins Archiv. Ohne diesen Moment passiert nichts Spürbares. <span class="pill ok">gebaut</span></div></li>
+  <li><div><b>Die Bilanz ist sichtbar</b>„3 verdient · 2 eingelöst“ über der Liste, eingelöste Belohnungen mit Datum im Archiv. Das ist der Satz, den jemand weitererzählt. <span class="pill ok">gebaut</span></div></li>
+  <li><div><b>Khaos wird zum Zeugen</b>Er erinnert an die verdiente, aber nicht abgeholte Belohnung. Das ist die stärkste Benachrichtigung, die die App senden kann – sie meldet keinen Mangel, sondern ein Guthaben. <span class="pill warn">gebaut, nur Android</span></div></li>
+  <li><div><b>Vorschläge senken die Hürde</b>Sechs zufällige Ideen beim Anlegen, bewusst nicht nur Käufe: ein Tag ganz für mich, langes Bad, Wochenende ohne Termine. <span class="pill ok">gebaut</span></div></li>
+</ol>
+
+<h2>4. Zwei Einwände</h2>
+<div class="obj">
+  <p class="q">„Ich kann mir das Shirt auch ohne App kaufen.“</p>
+  <p>Stimmt, und das gilt für jede Selbstverpflichtung. Der Wert liegt darin, den Handel vorher explizit zu machen und den Aufschub auszuhalten. Die App stützt das an zwei Stellen: Eine Belohnung ist erst einlösbar, wenn das Level wirklich erreicht ist, und die Bilanz bleibt dauerhaft sichtbar. Wer sich selbst betrügt, sieht es in der eigenen Statistik.</p>
+</div>
+<div class="obj">
+  <p class="q">„Das macht die App zum Konsumtreiber.“</p>
+  <p>Berechtigt. Deshalb enthält die Vorschlagsliste bewusst überwiegend Belohnungen, die nichts kosten: Zeit, Ruhe, Aufschub von Pflichten. Wer sich Dinge kaufen will, kann das – aber die App legt es nicht nahe.</p>
+</div>
+
+<h2>5. Store und Auffindbarkeit</h2>
+<p>Der Kernsatz allein wird nicht gefunden. Gesucht wird nach „Gewohnheiten“, „Ziele“, „Motivation“, „Schrittzähler“. Deshalb trennen:</p>
+<div class="tbl"><table>
+<tr><th>Feld</th><th>Inhalt</th></tr>
+<tr><td>Store-Titel</td><td>RespecYou: Ziele &amp; Belohnungen</td></tr>
+<tr><td>Kurzbeschreibung</td><td>Versprich dir was. Zieh es durch. Hol es dir.</td></tr>
+<tr><td>Erste Zeile der Beschreibung</td><td>Du sagst dir selbst zu, was du dir gönnst – RespecYou nimmt dich beim Wort und zeigt dir, wie weit du noch bist.</td></tr>
+<tr><td>Erster Screenshot</td><td>Der Startbildschirm mit einer verdienten Belohnung und dem Einlösen-Knopf. Nicht das Level, nicht Khaos.</td></tr>
+</table></div>
+
+<h2>6. Was jetzt noch fehlt</h2>
+<ul>
+  <li><b>Testen mit echten Menschen.</b> Zwei oder drei Leute den Einstieg machen lassen und zusehen, ob die umgedrehte Frage verstanden wird. Das ist die einzige offene Frage, die kein Argument klärt.</li>
+  <li><b>Wiederholbare Belohnungen.</b> Aktuell ist jede Belohnung einmalig. „Jeden Monat ein Kinoabend, wenn ich zwölf Einheiten schaffe“ geht noch nicht.</li>
+  <li><b>Belohnung an ein Ziel binden</b> statt nur an ein Level. Wäre direkter, macht aber die Mechanik komplizierter – erst nach dem Test entscheiden.</li>
+  <li><b>Frei/Premium-Schnitt umsetzen.</b> Steht im Konzept-Check v1 fest, ist im Code noch nicht vorhanden.</li>
+</ul>
+
+<p class="foot">Was aus dem Konzept-Check v1 unverändert gilt: Marktzahlen und Wettbewerb (Abschnitte 1 und 2), die Liste der fehlenden Verkaufsbausteine (4), Einmalkauf mit dauerhaft kostenloser Variante (6), die Ertragsrechnung (7) und die Steuerfragen (8). Zurücksetzen auf den Stand vor dem Umbau: <code>git revert</code> des Commits „Make the reward contract the backbone of the app“.</p>
+</main>
