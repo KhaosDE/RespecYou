@@ -40,11 +40,28 @@ Da Apple HealthKit keinen Web-Zugriff erlaubt, holt sich die iOS-Version Schritt
 
 ## Technik
 
-Eine einzige HTML-Datei (`www/index.html`) als Basis, plattformspezifisch erweitert:
-- Android-Build über [Capacitor](https://capacitorjs.com/)
-- iOS/Web über eine eigenständige PWA (Manifest, Service Worker, iOS-Icons) im `docs/`-Ordner, gehostet via GitHub Pages
-- Daten bleiben lokal auf dem Gerät (`localStorage`), keine Cloud-Anbindung außer der optionalen iPhone-Bridge
-- Khaos-Sprites werden mit `tools/khaos_gen.py` erzeugt (schlanke, flauschige Pixelfigur in 6 Stufen); Ausgabe wird in `docs/index.html` eingesetzt
+Eine gemeinsame Quelle, zwei getrennte Plattform-Fassungen mit eigenen Versionsnummern:
+
+```
+src/index.html              gemeinsame Quelle (die ganze App)
+VERSION                     Versionsnummern, getrennt für android und ios
+tools/build.py              erzeugt beide Fassungen
+  -> docs/                  iOS/Web (PWA, GitHub Pages)
+  -> dist/android/www/      Android (in das lokale Capacitor-Projekt nach www/ kopieren)
+tools/khaos_gen.py          erzeugt die Khaos-Pixelraster (Ausgabe in src/index.html einsetzen)
+```
+
+Nach jeder Änderung an `src/index.html` einmal `python3 tools/build.py` ausführen – erst dann sind
+`docs/` und `dist/` aktuell. Was sich zwischen den Fassungen unterscheidet:
+
+| | Android | iOS/Web |
+|---|---|---|
+| Erinnerungen je Ziel | ja (geplante Benachrichtigungen) | nein, technisch nicht möglich |
+| Health-Daten | Health Connect | iPhone-Bridge über Kurzbefehl |
+| Update-Suche in der App | ja (APK aus den Releases) | nein, Store bzw. Neuladen |
+| Auslieferung | Capacitor-Build, signiertes APK | GitHub Pages, „Zum Home-Bildschirm“ |
+
+Daten bleiben lokal auf dem Gerät (`localStorage`), keine Cloud-Anbindung außer der optionalen iPhone-Bridge.
 
 ## Support
 
