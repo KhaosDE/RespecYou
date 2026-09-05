@@ -43,14 +43,15 @@ a{ color:var(--cyan); }
 .src{ font-size:13px; color:var(--muted); } .src li{ margin:0 0 3px; word-break:break-word; }
 </style>
 <main>
-<p class="eyebrow">Stand 3. September 2026 · Zielbild: bezahltes Produkt</p>
+<p class="eyebrow">Stand 5. September 2026 · Einmalkauf mit dauerhaft kostenloser Variante</p>
 <h1>RespecYou Konzept-Check</h1>
 <p class="note">Prüft, ob eine Motivations-App mit Begleiter als bezahltes Produkt tragfähig ist und was dafür im Projekt noch fehlt. Zahlen stammen aus öffentlichen Quellen (unten verlinkt), Schätzungen sind als solche markiert.</p>
 
 <div class="verdict">
   <div class="v ok"><b>Markt</b><span>Die Kategorie wächst (rund 14 % pro Jahr) und ist die zahlungsstärkste App-Kategorie überhaupt. Zahlungsbereitschaft ist vorhanden, auch in Deutschland.</span></div>
   <div class="v warn"><b>Nische</b><span>„Begleiter, der mit deiner Aktivität wächst“ ist keine leere Nische. Finch dominiert Selbstfürsorge mit Haustier, Motion, DigiBuddy und FitPets machen genau Fitness mit Haustier. RespecYou braucht ein schärferes Alleinstellungsmerkmal als den Begleiter.</span></div>
-  <div class="v bad"><b>Produkt</b><span>Für ein bezahltes Produkt fehlt heute die komplette Verkaufsschicht: kein Store, keine Zahlung, kein Lizenz- oder Kontomodell, keine Rechtstexte. Das ist Pflichtarbeit vor jedem weiteren Feature.</span></div>
+  <div class="v bad"><b>Produkt</b><span>Für ein bezahltes Produkt fehlt die Verkaufsschicht: kein Store-Konto, keine Zahlung, keine Rechtstexte, kein Gewerbe. Das ist Pflichtarbeit, unabhängig davon wie gut die App ist.</span></div>
+  <div class="v warn"><b>Positionierung</b><span>Der Kaufgrund steht (Abschnitt 5), aber das Argument „echte Belohnungen“ trägt im Produkt noch nicht: Belohnungen sind heute nur Text plus Level. Ohne Ausbau ist der Kaufgrund eine Behauptung.</span></div>
 </div>
 
 <h2>1. Marktlage in Zahlen</h2>
@@ -95,53 +96,90 @@ a{ color:var(--cyan); }
 <div class="tbl"><table>
 <tr><th>Baustein</th><th>Status</th><th>Was nötig ist</th></tr>
 <tr><td>Vertriebskanal Android</td><td><span class="pill bad">fehlt</span></td><td>Google Play Console (25 USD einmalig). Die APK über GitHub Releases lässt sich nicht verkaufen. Play Billing kostet 15 % bei unter 1 Mio. USD Umsatz.</td></tr>
-<tr><td>Vertriebskanal iOS</td><td><span class="pill bad">fehlt</span></td><td>Als PWA kein App Store und kein Apple-Bezahlsystem. Bezahlung nur über Web-Kauf (z. B. Lemon Squeezy oder Paddle als Händler, die die EU-Umsatzsteuer abführen) plus Freischaltung per Lizenzschlüssel in der App.</td></tr>
+<tr><td>Vertriebskanal iOS</td><td><span class="pill warn">bewusst offen</span></td><td>Als PWA kein App Store und kein Apple-Bezahlsystem. Entschieden: iOS bleibt vorerst kostenlos. Falls später doch: Web-Kauf über einen Händler (Lemon Squeezy, Paddle – die führen die EU-Umsatzsteuer ab) plus Freischaltung per Lizenzschlüssel.</td></tr>
 <tr><td>Freischaltung ohne Konto</td><td><span class="pill bad">fehlt</span></td><td>Ein Lizenzschlüssel, der einmal online geprüft und lokal gespeichert wird. Braucht keinen eigenen Server, wenn der Händler eine Lizenz-API bietet. Behält „Daten bleiben lokal“ bei.</td></tr>
 <tr><td>Gerätewechsel</td><td><span class="pill warn">teilweise</span></td><td>Export/Import existiert. Zahlende Nutzer erwarten, dass Kauf und Fortschritt beim Handywechsel mitkommen. Lizenzschlüssel löst den Kauf, Export/Import den Fortschritt. Akzeptabel für den Start.</td></tr>
 <tr><td>Rechtstexte</td><td><span class="pill bad">fehlt</span></td><td>Impressum, Datenschutzerklärung (DSGVO, auch wenn nichts erhoben wird), AGB mit Widerrufsbelehrung für digitale Inhalte. Für den Store: Datenschutz-URL und Altersfreigabe.</td></tr>
 <tr><td>Gewerbe / Steuer</td><td><span class="pill bad">offen</span></td><td>Verkauf ist gewerblich. Gewerbeanmeldung, Kleinunternehmerregelung prüfen. Mit Händler-Modell (Lemon Squeezy, Paddle) entfällt die eigene Umsatzsteuer-Abrechnung ins Ausland.</td></tr>
-<tr><td>Frei/Bezahlt-Schnitt</td><td><span class="pill bad">fehlt</span></td><td>Entscheidung, was kostenlos bleibt. Vorschlag unten.</td></tr>
-<tr><td>Erinnerungen</td><td><span class="pill warn">nur Android</span></td><td>Pro Aktivität geplant. Auf iOS als PWA technisch nicht möglich ohne Push-Server. Smartwatches spiegeln Handy-Benachrichtigungen automatisch.</td></tr>
-<tr><td>Bindung nach Tag 1</td><td><span class="pill warn">teilweise</span></td><td>Onboarding, Tages-Motivation, Streak-Freeze existieren. Fehlt: Widget (Android), Wochenrückblick, Erinnerung an ungenutzte reale Belohnung.</td></tr>
+<tr><td>Frei/Bezahlt-Schnitt</td><td><span class="pill warn">entschieden, nicht gebaut</span></td><td>Einmalkauf mit dauerhaft kostenloser Variante, Grenze siehe Abschnitt 6. Im Code existiert die Unterscheidung noch nicht.</td></tr>
+<tr><td>Erinnerungen je Ziel</td><td><span class="pill ok">gebaut (Android)</span></td><td>Uhrzeit und Wochentage pro Ziel, still wenn das Ziel heute schon erledigt ist. Auf iOS als PWA ohne Push-Server nicht möglich. Smartwatches spiegeln die Handy-Benachrichtigung. Test auf echtem Gerät steht aus.</td></tr>
+<tr><td>Bindung nach Tag 1</td><td><span class="pill warn">teilweise</span></td><td>Onboarding, Tages-Motivation, Streak-Freeze und Erinnerungen je Ziel existieren. Fehlt: Einlösen von Belohnungen (Abschnitt 5), Widget (Android), Wochenrückblick.</td></tr>
 <tr><td>Feedback-Kanal</td><td><span class="pill ok">vorhanden</span></td><td>Mail aus der App.</td></tr>
 <tr><td>Store-Material</td><td><span class="pill bad">fehlt</span></td><td>Screenshots, Kurzbeschreibung, Feature-Grafik, Datenschutz-URL.</td></tr>
 <tr><td>Nutzungsdaten</td><td><span class="pill bad">fehlt</span></td><td>Ohne jede Messung lässt sich Retention nicht beurteilen. Minimal: freiwillige, anonyme Zählung von Installation, Tag-7-Rückkehr, Kauf. Muss in die Datenschutzerklärung.</td></tr>
 </table></div>
 
-<h2>5. Preismodell-Vorschlag</h2>
-<p>Empfehlung: <b>Einmalkauf</b> statt Abo für den Start. Gründe: kein Server, kein laufender Aufwand, in Deutschland höhere Akzeptanz, Streaks beweist das Modell. Abo lohnt erst, wenn laufende Leistung dahintersteht (Sync, Server-Push).</p>
-<div class="tbl"><table>
-<tr><th>Kostenlos</th><th>Premium (Einmalkauf 6,99 – 9,99 €)</th></tr>
-<tr><td>Eigene Ziele, XP, Level, Ränge, Khaos bis Stufe 3, ein Theme, Wochenchallenge, Export/Import</td><td>Alle Khaos-Skins und Stufen 4 bis 6, alle Themes, Perks (Streak-Freeze, Doppel-XP), Health-Anbindung, Erinnerungen je Aktivität, Statistik, reale Belohnungen ohne Limit</td></tr>
-</table></div>
-<p class="note">Alternative nach Finch-Vorbild: alle Werkzeuge kostenlos, nur Kosmetik (Skins, Themes) bezahlt. Konvertiert schlechter, hält aber mehr Nutzer. Für einen Einzelentwickler ohne Marketingbudget ist der Einmalkauf mit klarem Nutzen die sicherere Wahl.</p>
+<h2>5. Warum braucht jemand diese App?</h2>
+<p>Die ehrliche Ausgangslage: Niemand braucht noch einen Tracker. Fast jeder hat schon einen. Was fehlt, ist nicht die Messung, sondern der Grund, heute wirklich loszugehen. Genau da sitzt RespecYou.</p>
+<h3>Der Kernsatz</h3>
+<p style="font-size:19px;line-height:1.35;margin:6px 0 4px"><b>„Du hast schon Apps, die messen. RespecYou ist die, die dich losgehen lässt.“</b></p>
+<p class="note">Unterzeile für Store und Startbildschirm: „Eigene Ziele, echte Belohnungen, dein Fortschritt aus den Apps, die du schon hast.“</p>
+<p class="note">Verworfen: „Level-Up für dein Leben“ (austauschbar, sagt nichts über den Nutzen) und „Die Motivations-App“ (Kategorie, kein Grund).</p>
 
-<h2>6. Was realistisch dabei herauskommt</h2>
+<h3>Die sechs Argumente</h3>
+<p>Jedes Argument ist ein Satz, den ein Nutzer über sich selbst sagt, plus die Antwort der App. Die letzte Spalte sagt, ob das Produkt die Antwort heute wirklich einlöst.</p>
+<div class="tbl"><table>
+<tr><th>Der Satz des Nutzers</th><th>Antwort von RespecYou</th><th>Eingelöst?</th></tr>
+<tr><td>„Ich nehme mir was vor und ziehe es nicht durch.“</td><td>Fortschritt wird sichtbar: XP, Level, Serie, ein Begleiter der mitwächst. Der Aufwand von gestern ist heute noch da.</td><td><span class="pill ok">ja</span></td></tr>
+<tr><td>„Meine Fitness-App kennt nur Sport. Mein Ziel ist ein anderes.“</td><td>Du legst die Ziele selbst an, mit eigenem XP-Wert – auch Dehnen, Treppe statt Aufzug, früh ins Bett. Der Katalog ist Vorschlag, nicht Vorgabe.</td><td><span class="pill ok">ja</span></td></tr>
+<tr><td>„Ich will nicht alles doppelt erfassen.“</td><td>RespecYou misst nichts selbst, sondern holt Schritte und Kalorien aus Health Connect bzw. der Health-App. Uhr und Strava zählen mit.</td><td><span class="pill warn">Android ja, iOS nur über Kurzbefehl</span></td></tr>
+<tr><td>„Abzeichen sind mir egal.“</td><td>Du legst selbst fest, was du dir bei welchem Level gönnst. Die App ist der Vertrag mit dir selbst, die Belohnung ist echt.</td><td><span class="pill bad">nur halb – siehe unten</span></td></tr>
+<tr><td>„Ich vergesse es im Alltag einfach.“</td><td>Erinnerung je Ziel, zur Uhrzeit und an den Tagen die passen, auch auf der Uhr – und nur, wenn das Ziel heute noch offen ist.</td><td><span class="pill warn">Android ja, iOS nein</span></td></tr>
+<tr><td>„Meine Gesundheitsdaten gehen niemanden etwas an.“</td><td>Alles bleibt auf dem Gerät. Kein Konto, keine Anmeldung, keine Cloud.</td><td><span class="pill ok">ja</span></td></tr>
+</table></div>
+
+<h3>Die Lücke, die den Kaufgrund trägt</h3>
+<p>Argument vier ist das einzige, das keine andere App im Vergleich hat – und ausgerechnet das ist im Produkt am dünnsten. Eine Belohnung ist heute ein Text und eine Levelzahl. Damit der Satz „echte Belohnungen“ hält, fehlen drei kleine Dinge:</p>
+<ul>
+  <li><b>Einlösen als Handlung.</b> Eine freigeschaltete Belohnung wird angetippt, abgehakt und wandert mit Datum ins Archiv. Ohne diesen Moment passiert nichts Spürbares.</li>
+  <li><b>Erinnerung an Nichteingelöstes.</b> „Du hast dir das seit 12 Tagen verdient und noch nicht geholt.“ Das ist die stärkste Benachrichtigung, die die App senden kann.</li>
+  <li><b>Vorschläge beim Anlegen.</b> Die meisten wissen im leeren Feld nicht, was sie sich gönnen sollen. Eine kurze Liste (Kinoabend, neues Shirt, Tag ohne Termine) senkt die Hürde.</li>
+</ul>
+<p class="note">Aufwand geschätzt ein Arbeitstag. Ohne diesen Ausbau verkauft der Store-Text etwas, das die App nicht liefert – das rächt sich in den Bewertungen.</p>
+
+<h3>Wem man das verkauft</h3>
+<p>Nicht dem Sportler, der schon trainiert – der hat Strava. Sondern dem, der wieder anfangen will und es allein nicht schafft: Wiedereinsteiger nach einer Pause, Menschen mit sitzendem Beruf, Leute die Gewohnheiten aufbauen wollen und für die eine reine Zahl kein Antrieb ist. Deutschsprachig, Retro-Optik, kein Konto – das spricht eher die 25- bis 45-Jährigen an, die schon drei Fitness-Apps wieder gelöscht haben.</p>
+
+<h2>6. Preismodell</h2>
+<p><b>Entschieden: Einmalkauf, und es gibt dauerhaft eine kostenlose Variante.</b> Kein Abo, weil dahinter keine laufende Leistung steht (kein Server, kein Sync). Die kostenlose Variante ist keine Testphase mit Ablaufdatum, sondern bleibt vollwertig nutzbar – für Tester, für Freunde, und weil eine App, die man erst kaufen muss, um sie zu verstehen, nicht gekauft wird.</p>
+<div class="tbl"><table>
+<tr><th>Kostenlos, dauerhaft</th><th>Premium (Einmalkauf 6,99 – 9,99 €)</th></tr>
+<tr><td>Eigene Ziele ohne Limit, XP, Level, Ränge, Serie, Wochenchallenge, Tages-Motivation, Achievements, Khaos bis Form 2, ein Theme, Export und Import</td><td>Khaos-Endform und alle Farben, Körpertyp-Wahl, alle Themes, Perks (Streak-Freeze, Doppel-XP), Health-Anbindung, Erinnerungen je Ziel, Statistik-Übersicht, reale Belohnungen</td></tr>
+</table></div>
+<p class="note">Die Grenze ist bewusst so gezogen, dass der kostenlose Teil für sich funktioniert und nichts abgeschnitten wirkt. Bezahlt wird das, was Zeit spart (Health-Anbindung, Erinnerungen) und was Spaß macht (Khaos, Themes, Perks). Wer testet, kann alles Wesentliche beurteilen.</p>
+
+<h2>7. Was realistisch dabei herauskommt</h2>
 <div class="calc">
 <div><span>Annahme: Installationen im ersten Jahr</span><span>10.000</span></div>
 <div><span>Download → Kauf (1,5 – 2,7 %)</span><span>150 – 270 Käufer</span></div>
 <div><span>Preis 7,99 € abzüglich 15 % Store-Gebühr</span><span>≈ 6,80 € netto</span></div>
 <div><span>Umsatz Jahr 1</span><span>≈ 1.000 – 1.850 €</span></div>
 </div>
-<p>10.000 Installationen ohne Werbung sind für eine unbekannte App bereits ambitioniert. Das erste Jahr ist ein Nebeneinkommen, kein Lebensunterhalt. HabitKit zeigt, dass der Sprung möglich ist, aber erst nach Jahren und über Store-Rankings. Wer das nicht durchhalten will, sollte RespecYou als kostenlose App mit freiwilliger Unterstützung führen.</p>
+<p>10.000 Installationen ohne Werbung sind für eine unbekannte App bereits ambitioniert. Das erste Jahr ist ein Taschengeld, kein Lebensunterhalt – was als Ziel ausdrücklich reicht. HabitKit zeigt, dass mehr möglich ist, aber erst nach Jahren und über Store-Rankings.</p>
 
-<h2>7. Empfehlung und Reihenfolge</h2>
+<h2>8. Gewerbe und Steuern</h2>
+<p class="note">Keine Rechts- oder Steuerberatung, nur die Zahlen zum Nachprüfen.</p>
+<div class="tbl"><table>
+<tr><th>Frage</th><th>Antwort</th></tr>
+<tr><td>Gibt es eine 500-€-Grenze für die Gewerbeanmeldung?</td><td>Nein. Die Anmeldepflicht hängt nicht am Betrag, sondern an der Tätigkeit: dauerhaft, selbstständig, mit Gewinnabsicht. Die Zahl im Kopf ist vermutlich die <b>Freigrenze von 410 €</b> für Nebeneinkünfte von Angestellten – die betrifft die Einkommensteuer, nicht die Anmeldung.</td></tr>
+<tr><td>Kann man das Gewerbe nachträglich anmelden?</td><td>Ja, rückwirkend zum tatsächlichen Beginn. Formal ist die verspätete Anmeldung eine Ordnungswidrigkeit; bei kleinen Beträgen und zeitnaher Nachmeldung bleibt es in der Praxis meist ohne oder bei einem geringen Bußgeld. In der Steuererklärung müssen die Einnahmen ohnehin auftauchen.</td></tr>
+<tr><td>Was kostet die Anmeldung?</td><td>Je nach Gemeinde etwa 15 bis 65 €, einmalig.</td></tr>
+<tr><td>Umsatzsteuer?</td><td>Kleinunternehmerregelung ankreuzen: keine Umsatzsteuer bis 25.000 € Vorjahresumsatz. Google Play tritt gegenüber den Käufern als Händler auf und führt die Umsatzsteuer ab.</td></tr>
+<tr><td>Gewerbesteuer?</td><td>Erst ab 24.500 € Gewinn im Jahr. Bei Taschengeld-Größenordnung nicht relevant.</td></tr>
+<tr><td>Store-Gebühr?</td><td>15 % bei unter 1 Mio. USD Jahresumsatz.</td></tr>
+</table></div>
+<p><b>Empfehlung:</b> Gewerbe anmelden, wenn die App in den Store geht – nicht früher, nicht später. Solange nichts verkauft wird, gibt es nichts anzumelden. Wer angestellt ist, prüft zusätzlich, ob der Arbeitsvertrag eine Meldung der Nebentätigkeit verlangt.</p>
+
+<h2>9. Nächste Schritte</h2>
 <ol>
-  <li><b>Positionierung schärfen:</b> „Deine Ziele, deine echten Belohnungen, dein Fortschritt aus den Apps, die du schon hast.“ Khaos ist Bindung, nicht Kaufgrund.</li>
-  <li><b>Android zuerst in den Play Store.</b> Dort funktionieren Benachrichtigungen, Health Connect und Bezahlung ohne Umwege. iOS bleibt PWA und kostenlos, bis Nachfrage messbar ist.</li>
-  <li><b>Erinnerungen je Aktivität</b> bauen (Android), weil sie direkt auf Tag-30-Bindung wirken.</li>
-  <li><b>Khaos flauschig</b> neu zeichnen, weil der Begleiter die Bindung trägt.</li>
-  <li><b>Verkaufsschicht:</b> Play Billing für Einmalkauf, Rechtstexte, Store-Material, anonyme Mindestmessung.</li>
-  <li><b>iOS getrennt</b> als eigener Ordner mit eigener Versionsnummer, ohne Bezahlung, mit Hinweis auf die Grenzen der PWA.</li>
+  <li><b>Belohnungen ausbauen</b> (Einlösen, Erinnerung, Vorschläge). Ohne das trägt der Kaufgrund nicht.</li>
+  <li><b>Android-Release testen</b>: Erinnerungen je Ziel auf einem echten Gerät und der Uhr prüfen.</li>
+  <li><b>Play Console anlegen</b> (25 US-Dollar einmalig), Store-Material erstellen, Rechtstexte schreiben.</li>
+  <li><b>Frei/Premium-Schalter einbauen</b> plus Play Billing für den Einmalkauf.</li>
+  <li><b>Gewerbe anmelden</b>, sobald der Store-Eintrag steht.</li>
+  <li><b>iOS/Web</b> bleibt kostenlos und ohne Bezahlung, bis die Nachfrage messbar ist.</li>
 </ol>
-
-<h2>8. Entscheidungen, die nur du treffen kannst</h2>
-<ul>
-  <li>Gewerbe anmelden, ja oder nein? Ohne Gewerbe kein Verkauf.</li>
-  <li>Einmalkauf oder Abo?</li>
-  <li>Kostenlos-Grenze: Vorschlag oben oder Finch-Modell?</li>
-  <li>Bist du bereit, freiwillige anonyme Nutzungsdaten zu erheben? Ohne sie ist jede spätere Entscheidung Bauchgefühl.</li>
-</ul>
+<p class="note">Offen und nur von dir zu entscheiden: ob freiwillige, anonyme Nutzungsdaten erhoben werden dürfen. Ohne sie bleibt jede spätere Entscheidung Bauchgefühl – mit ihnen braucht es einen Absatz in der Datenschutzerklärung.</p>
 
 <h2>Quellen</h2>
 <ul class="src">
