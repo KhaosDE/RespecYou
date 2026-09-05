@@ -22,20 +22,46 @@ app/
   www/                      wird beim Build überschrieben, nicht pflegen
 ```
 
-So schiebst du es rein (auf deinem Rechner, im geklonten Repo):
+### Schritt für Schritt (Windows, PowerShell)
 
-```bash
-git checkout main && git pull
-mkdir app
-# Inhalt deines Capacitor-Projekts nach app/ kopieren – ohne node_modules,
-# ohne build-Ordner, ohne local.properties und ohne den Keystore
+Du kannst den **ganzen** Projektordner kopieren. Die `.gitignore` im Repo hält alles heraus, was
+nicht hineingehört: `node_modules`, `build`, `.gradle`, `.idea`, `local.properties`, `www` und
+jede `*.jks`/`*.keystore`.
+
+```powershell
+# 1. Repository holen (einmalig; sonst nur die letzten zwei Zeilen)
+cd $HOME\Documents
+git clone https://github.com/KhaosDE/RespecYou.git
+cd RespecYou
+git checkout main
+git pull
+
+# 2. Capacitor-Projekt hineinkopieren – Pfad links anpassen
+$quelle = "C:\Pfad\zu\deinem\RespecYou-Capacitor"
+New-Item -ItemType Directory -Force -Path app | Out-Null
+Copy-Item "$quelle\*" -Destination app -Recurse -Force
+
+# 3. Kontrolle: was würde übertragen werden?
 git add app
+git status --short | Measure-Object -Line      # Anzahl Dateien
+git status --short | Select-String -Pattern "node_modules|\.jks|\.keystore|local.properties"
+```
+
+Die letzte Zeile muss **leer** bleiben. Erscheint dort etwas, brich ab (`git reset`) und melde dich,
+bevor du weitermachst. Die Anzahl der Dateien liegt normalerweise bei 60 bis 200 – sind es
+Tausende, sind node_modules mit dabei.
+
+```powershell
+# 4. Übertragen
 git commit -m "Add the Capacitor project"
 git push
 ```
 
-Die `.gitignore` im Repo hält die Ordner heraus, die nicht hineingehören: `node_modules`,
-`build`, `.gradle`, `local.properties`, `www` und jede `*.jks`/`*.keystore`.
+Unter macOS oder Linux ist es dasselbe mit `cp -r /pfad/zum/projekt/. app/` statt `Copy-Item`.
+
+**Ohne Git**: Du kannst den Ordner auch über die GitHub-Weboberfläche hochladen (Add file →
+Upload files, Ordner hineinziehen). Lösche vorher `node_modules`, `build`, `.gradle` und den
+Keystore aus der Kopie, denn beim Weg über den Browser greift die `.gitignore` nicht.
 
 **Der Keystore darf nicht ins Repository.** Er kommt als Secret rein, siehe unten.
 
