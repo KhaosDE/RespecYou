@@ -19,13 +19,13 @@ Die meisten Fitness-Apps scheitern nicht an fehlenden Funktionen, sondern daran,
 
 - **XP & Level-System** mit wachsendem Rang/Titel (vom "Neuling" bis "Unaufhaltsam")
 - **Eigene Ziele** mit individuellem XP-Wert und optionalem Wochenziel
-- **Aktivitäten-Katalog** mit über 25 Vorschlägen in 6 Kategorien – als Zusatzquelle für die Wochenchallenge, nicht als Zwang
+- **Aktivitäten-Katalog** mit über 50 Vorschlägen in 6 Kategorien – als Zusatzquelle für die Wochenchallenge, nicht als Zwang
 - **Wochenchallenge & Tages-Motivation** mit wählbarem Schwierigkeitsgrad
 - **Achievements** für Meilensteine, einzelne Aktivitäten, Serien und mehr
 - **Khaos**, dein Begleiter: ein flauschiges Pixelmonster, das mit deinem Level sichtbar wächst (alle 10 Level eine neue Form). Männlich oder weiblich wählbar, vier Farben schalten sich mit dem Level frei – dein Fortschritt bleibt dabei immer erhalten
 - **Perks**: Streak-Freeze (rettet eine verpasste Serie), Doppel-XP-Tage, eine "Legendär"-Challenge-Stufe
 - **Erinnerungen je Ziel**: Uhrzeit und Wochentage pro Ziel, Khaos meldet sich nur, wenn das Ziel heute noch offen ist (Android-App; Smartwatches spiegeln die Benachrichtigung)
-- **Eigene Belohnungen**, die du dir selbst bei bestimmten Leveln setzt
+- **Belohnungsvertrag** als Kern: Du legst zuerst fest, was du dir gönnst, arbeitest darauf hin, löst die Belohnung ein und siehst deine Bilanz. Vorschläge helfen beim Anlegen, überwiegend solche, die nichts kosten
 - **Themes**: mehrere freischaltbare Farbdarstellungen im Retro-Terminal-Look
 - **Automatischer XP-Gewinn aus echten Aktivitätsdaten** – auf Android über Health Connect (Handy/Watch/Samsung Health), auf iPhone über eine leichtgewichtige Bridge, die Schritte/Kalorien aus der Health-App abholt (siehe unten)
 
@@ -49,6 +49,8 @@ tools/build.py              erzeugt beide Fassungen
   -> docs/                  iOS/Web (PWA, GitHub Pages)
   -> dist/android/www/      Android (in das lokale Capacitor-Projekt nach www/ kopieren)
 tools/khaos_gen.py          erzeugt die Khaos-Pixelraster (Ausgabe in src/index.html einsetzen)
+tools/preview.py            baut eine einzelne, in sich geschlossene Datei zum Verschicken (--test
+                            fügt einen Knopf zum Zurücksetzen hinzu)
 ```
 
 Nach jeder Änderung an `src/index.html` einmal `python3 tools/build.py` ausführen – erst dann sind

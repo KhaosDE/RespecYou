@@ -202,7 +202,7 @@
 </style>
 </head>
 <body>
-<script>var BUILD={ platform:"android", version:"1.7" };</script>
+<script>var BUILD={ platform:"android", version:"1.8" };</script>
 <div class="wrap">
 <div class="device">
 
@@ -349,11 +349,12 @@
       <div class="hint" style="text-transform:none;margin:0 0 10px">Gut. Und was musst du dafür regelmäßig tun? Ein Ziel reicht für den Anfang – weitere kannst du jederzeit anlegen.</div>
       <label>Dein erstes Ziel</label>
       <input type="text" id="ob-goal" maxlength="40" placeholder="z.B. 20 Minuten spazieren">
+      <div class="chips" id="ob-goal-ideas"></div>
       <label>XP pro Abschluss</label>
       <input type="number" id="ob-points" value="10" min="1">
       <div class="hint" style="margin:0 0 10px">Mit 10 XP pro Abschluss erreichst du deine Belohnung nach etwa 15 Abschlüssen.</div>
       <div class="modal-actions">
-        <button class="pbtn green" style="flex:1" onclick="obFinish()">Los geht\'s</button>
+        <button class="pbtn green" style="flex:1" onclick="obFinish()">Los geht’s</button>
         <button class="pbtn ghost" onclick="obBack()">Zurück</button>
       </div>
     </div>
@@ -869,15 +870,38 @@
      Eine Belohnung durchläuft drei Zustände: gesperrt -> freigeschaltet (Level erreicht) -> eingelöst
      (mit Datum). Der Banner oben zeigt immer den nächsten Schritt: entweder etwas abzuholen oder das
      nächste Versprechen mit Fortschritt dorthin. */
-  var REWARD_IDEAS=['Ein Tag ganz für mich','Kinoabend','Neues Trainings-Shirt','Langes Bad',
-    'Lieblingsessen bestellen','Ein Buch','Ausschlafen ohne Wecker','Tag ohne Haushalt',
-    'Konzert oder Ausflug','Neue Kopfhörer','Massage','Wochenende ohne Termine'];
+  // Vorschläge bewusst zweigeteilt: die Liste zeigt mehr Belohnungen, die nichts kosten, als
+  // Anschaffungen – die App soll nicht zum Einkaufszettel werden.
+  var REWARD_IDEAS_FREE=['Ein Tag ganz für mich','Ausschlafen ohne Wecker','Tag ohne Haushalt',
+    'Wochenende ohne Termine','Langes Bad','Serienabend ohne schlechtes Gewissen','Nachmittag im Park',
+    'Ein Tag ohne Handy','Lieblingsfilm nochmal schauen','Spaziergang an einem neuen Ort',
+    'Ausflug ins Grüne','Später Frühstücken gehen','Ein Nickerchen mitten am Tag',
+    'Freunde einladen','Einen Tag lang nichts müssen','Sonnenuntergang irgendwo anschauen',
+    'Ein langes Telefonat mit wem Wichtigem','Bad in Ruhe, Tür zu','Musik laut, Kopf aus'];
+  var REWARD_IDEAS_BUY=['Kinoabend','Neues Trainings-Shirt','Lieblingsessen bestellen','Ein Buch',
+    'Neue Kopfhörer','Massage','Konzert oder Ausflug','Neue Laufschuhe','Café-Besuch mit Kuchen',
+    'Eine Pflanze fürs Zimmer','Das Spiel auf der Wunschliste','Ein gutes Frühstück auswärts',
+    'Sportzubehör, das noch fehlt','Ein Tag im Schwimmbad oder in der Therme'];
+  function shuffled(list){ return list.slice().sort(function(){ return Math.random()-0.5; }); }
   function renderIdeas(elId, inputId){
     var el=document.getElementById(elId); if(!el) return; el.innerHTML='';
-    // Bei jedem Öffnen sechs zufällige Vorschläge, damit das leere Feld nicht abschreckt.
-    REWARD_IDEAS.slice().sort(function(){ return Math.random()-0.5; }).slice(0,6).forEach(function(txt){
+    // Sechs Vorschläge pro Öffnen: vier kostenlose, zwei kleine Anschaffungen, gemischt.
+    var pick=shuffled(shuffled(REWARD_IDEAS_FREE).slice(0,4).concat(shuffled(REWARD_IDEAS_BUY).slice(0,2)));
+    pick.forEach(function(txt){
       var b=document.createElement('button'); b.type='button'; b.textContent=txt;
       b.onclick=function(){ document.getElementById(inputId).value=txt; };
+      el.appendChild(b);
+    });
+  }
+  // Vorschläge für das erste Ziel stammen aus dem Aktivitäten-Katalog, damit XP-Werte stimmig sind.
+  function renderGoalIdeas(){
+    var el=document.getElementById('ob-goal-ideas'); if(!el) return; el.innerHTML='';
+    shuffled(ACTIVITIES.filter(function(a){ return a.starter; })).slice(0,6).forEach(function(a){
+      var b=document.createElement('button'); b.type='button'; b.textContent=a.ic+' '+a.name;
+      b.onclick=function(){
+        document.getElementById('ob-goal').value=a.name;
+        document.getElementById('ob-points').value=a.xp;
+      };
       el.appendChild(b);
     });
   }
@@ -1150,32 +1174,59 @@
     {id:'sonstiges',     name:'Sonstiges',                   ic:'🎯'}
   ];
   var ACTIVITIES=[
-    {id:'walk',    name:'Spazieren',      ic:'🚶', xp:10, cat:'cardio', tip:'Zählt automatisch über deine Schritte. 30 Min. flott gehen ≈ 3.000 Schritte.'},
-    {id:'run',     name:'Laufen',         ic:'🏃', xp:25, cat:'cardio', tip:'Einfach vor der Haustür loslaufen – 20–30 Min. reichen für den Einstieg.'},
-    {id:'bike',    name:'Radfahren',      ic:'🚴', xp:25, cat:'cardio', tip:'Kurze Alltagswege mit dem Rad statt Auto – Training ohne extra Zeit.'},
-    {id:'swim',    name:'Schwimmen',      ic:'🏊', xp:30, cat:'cardio', tip:'Gelenkschonend & ganzkörperlich. Freibad/See im Sommer, Halle im Winter.'},
+    {id:'walk', starter:true,    name:'Spazieren',      ic:'🚶', xp:10, cat:'cardio', tip:'Zählt automatisch über deine Schritte. 30 Min. flott gehen ≈ 3.000 Schritte.'},
+    {id:'run', starter:true,     name:'Laufen',         ic:'🏃', xp:25, cat:'cardio', tip:'Einfach vor der Haustür loslaufen – 20–30 Min. reichen für den Einstieg.'},
+    {id:'bike', starter:true,    name:'Radfahren',      ic:'🚴', xp:25, cat:'cardio', tip:'Kurze Alltagswege mit dem Rad statt Auto – Training ohne extra Zeit.'},
+    {id:'swim', starter:true,    name:'Schwimmen',      ic:'🏊', xp:30, cat:'cardio', tip:'Gelenkschonend & ganzkörperlich. Freibad/See im Sommer, Halle im Winter.'},
     {id:'hike',    name:'Wandern',        ic:'🥾', xp:30, cat:'cardio', tip:'Naturrunde am Wochenende – Ausdauer und Kopf frei zugleich.'},
     {id:'rope',    name:'Seilspringen',   ic:'🪢', xp:20, cat:'cardio', tip:'5–10 Min. = intensives Cardio, braucht nur 2 m² Platz.'},
     {id:'rowing',  name:'Rudern',         ic:'🚣', xp:25, cat:'cardio', tip:'Rudergerät oder Boot – schont die Gelenke, fordert den ganzen Körper.'},
     {id:'skate',   name:'Inliner / Skaten', ic:'⛸️', xp:20, cat:'cardio', tip:'Cardio mit Spaßfaktor – auch ein Skatepark-Besuch zählt.'},
+    {id:'stepper', name:'Crosstrainer',    ic:'🏃‍♀️', xp:20, cat:'cardio', tip:'Gelenkschonend und wetterunabhängig – 20 Min. sind ein guter Start.'},
+    {id:'nordic',  name:'Nordic Walking',  ic:'🥢', xp:15, cat:'cardio', tip:'Stöcke nehmen Last von den Knien und holen den Oberkörper dazu.'},
+    {id:'stairsrun', name:'Treppenlauf',   ic:'🏢', xp:20, cat:'cardio', tip:'Ein Treppenhaus reicht. Fünf Durchgänge und du merkst es deutlich.'},
     {id:'climb',   name:'Klettern',       ic:'🧗', xp:30, cat:'cardio', tip:'Kletterhalle oder Fels – Kraft, Ausdauer und Kopf in einem.'},
     {id:'ski',     name:'Ski / Snowboard', ic:'⛷️', xp:30, cat:'cardio', tip:'Wintersport-Tag im Schnee – volle Beinarbeit.'},
-    {id:'pushups', name:'Liegestütze',    ic:'💪', xp:15, cat:'kraft', tip:'Kein Gerät nötig. Auch auf Knien möglich – Hauptsache regelmäßig.'},
-    {id:'squats',  name:'Kniebeugen',     ic:'🦵', xp:15, cat:'kraft', tip:'Beine & Po ohne Gewichte. Starte mit 3×15.'},
+    {id:'pushups', starter:true, name:'Liegestütze',    ic:'💪', xp:15, cat:'kraft', tip:'Kein Gerät nötig. Auch auf Knien möglich – Hauptsache regelmäßig.'},
+    {id:'squats', starter:true,  name:'Kniebeugen',     ic:'🦵', xp:15, cat:'kraft', tip:'Beine & Po ohne Gewichte. Starte mit 3×15.'},
     {id:'pullups', name:'Klimmzüge',      ic:'🏋️', xp:20, cat:'kraft', tip:'Klimmzugstange reicht – notfalls mit Band-Unterstützung starten.'},
     {id:'plank',   name:'Unterarmstütz',  ic:'🧍', xp:15, cat:'kraft', tip:'Rumpf stabil halten – schon 30–60 Sek. wirken.'},
-    {id:'gym',     name:'Krafttraining',  ic:'🏋️‍♀️', xp:25, cat:'kraft', tip:'Studio oder Hantelset zuhause – Grundübungen reichen völlig.'},
-    {id:'yoga',    name:'Yoga / Dehnen',  ic:'🧘', xp:15, cat:'beweglichkeit', tip:'Beweglichkeit & Entspannung – Video-Anleitungen reichen völlig.'},
+    {id:'gym', starter:true,     name:'Krafttraining',  ic:'🏋️‍♀️', xp:25, cat:'kraft', tip:'Studio oder Hantelset zuhause – Grundübungen reichen völlig.'},
+    {id:'lunges',  name:'Ausfallschritte', ic:'🦿', xp:15, cat:'kraft', tip:'Beine einzeln fordern – gut gegen Ungleichgewichte zwischen links und rechts.'},
+    {id:'dips',    name:'Dips',            ic:'🪑', xp:15, cat:'kraft', tip:'Ein stabiler Stuhl genügt für den Anfang.'},
+    {id:'band',    name:'Theraband',       ic:'🎗️', xp:15, cat:'kraft', tip:'Passt in jede Tasche – ideal für unterwegs oder im Urlaub.'},
+    {id:'kettle',  name:'Kettlebell',      ic:'⚫', xp:20, cat:'kraft', tip:'Eine Kugel, viele Übungen. Sauber schwingen statt schwer heben.'},
+    {id:'core', starter:true,    name:'Bauchtraining',   ic:'🧱', xp:15, cat:'kraft', tip:'Crunches, Beinheben, Käfer – 10 Minuten reichen völlig.'},
+    {id:'back', starter:true,    name:'Rückenübungen',   ic:'🔧', xp:15, cat:'kraft', tip:'Gerade bei Schreibtischarbeit die wichtigste Einheit der Woche.'},
+    {id:'yoga', starter:true,    name:'Yoga / Dehnen',  ic:'🧘', xp:15, cat:'beweglichkeit', tip:'Beweglichkeit & Entspannung – Video-Anleitungen reichen völlig.'},
     {id:'pilates', name:'Pilates',        ic:'🤸', xp:15, cat:'beweglichkeit', tip:'Rumpfkraft & Haltung – auch als kurzes Home-Workout.'},
     {id:'meditation', name:'Meditation / Atmen', ic:'🧘‍♂️', xp:10, cat:'beweglichkeit', tip:'5–10 Min. bewusst atmen – Erholung zählt auch zum Fortschritt.'},
-    {id:'stairs',  name:'Treppensteigen', ic:'🪜', xp:15, cat:'alltag', tip:'Aufzug meiden – jede Etage zählt. Perfekt im Alltag/Büro.'},
+    {id:'mobility', starter:true, name:'Mobility-Routine', ic:'🔄', xp:15, cat:'beweglichkeit', tip:'Hüfte, Schultern, Sprunggelenke – 10 Minuten gegen das lange Sitzen.'},
+    {id:'foam',    name:'Faszienrolle',    ic:'🧽', xp:10, cat:'beweglichkeit', tip:'Nach dem Training oder abends vor dem Fernseher.'},
+    {id:'tai',     name:'Tai Chi / Qigong', ic:'☯️', xp:15, cat:'beweglichkeit', tip:'Langsame Bewegung, ruhiger Kopf – auch für Einsteiger machbar.'},
+    {id:'sleep',   name:'Früh ins Bett',   ic:'🌙', xp:10, cat:'beweglichkeit', tip:'Schlaf ist Training. Ohne ihn bringt der Rest weniger.'},
+    {id:'water',   name:'Genug getrunken', ic:'💧', xp:5,  cat:'beweglichkeit', tip:'Kleiner Haken mit großer Wirkung – zwei Liter über den Tag.'},
+    {id:'stairs', starter:true,  name:'Treppensteigen', ic:'🪜', xp:15, cat:'alltag', tip:'Aufzug meiden – jede Etage zählt. Perfekt im Alltag/Büro.'},
     {id:'home',    name:'Hausarbeit',     ic:'🧹', xp:10, cat:'alltag', tip:'Putzen, Garten, Einkäufe tragen – Bewegung, die eh anfällt.'},
     {id:'dog',     name:'Gassi gehen',    ic:'🐕', xp:10, cat:'alltag', tip:'Der Hund freut sich – und du bewegst dich nebenbei mit.'},
-    {id:'dance',   name:'Tanzen',         ic:'💃', xp:20, cat:'spiel', tip:'Lieblingsmusik an – 3 Songs durchtanzen ist schon Cardio.'},
+    {id:'bikework', starter:true, name:'Arbeitsweg aktiv', ic:'🚲', xp:15, cat:'alltag', tip:'Zu Fuß oder mit dem Rad zur Arbeit – Training ohne extra Zeit.'},
+    {id:'garden',  name:'Garten',          ic:'🌱', xp:15, cat:'alltag', tip:'Umgraben und Unkraut jäten ist mehr Arbeit als es aussieht.'},
+    {id:'standup', name:'Aufstehen im Büro', ic:'🧍‍♂️', xp:5, cat:'alltag', tip:'Jede Stunde kurz hoch. Der Rücken dankt es dir am Abend.'},
+    {id:'shop',    name:'Einkauf zu Fuß',  ic:'🛒', xp:10, cat:'alltag', tip:'Ohne Auto einkaufen – hin leicht, zurück mit Gewicht.'},
+    {id:'kids',    name:'Toben mit Kindern', ic:'🧒', xp:15, cat:'alltag', tip:'Zählt voll. Wer das eine Stunde durchhält, hat trainiert.'},
+    {id:'dance', starter:true,   name:'Tanzen',         ic:'💃', xp:20, cat:'spiel', tip:'Lieblingsmusik an – 3 Songs durchtanzen ist schon Cardio.'},
     {id:'ball',    name:'Ballsport',      ic:'⚽', xp:25, cat:'spiel', tip:'Fußball/Basketball mit Freunden – Spaß plus Bewegung.'},
     {id:'boxing',  name:'Boxen',          ic:'🥊', xp:25, cat:'spiel', tip:'Boxsack oder Kurs – Stress abbauen und fit werden zugleich.'},
     {id:'tennis',  name:'Tischtennis',    ic:'🏓', xp:15, cat:'spiel', tip:'Schnelle Reflexe, viel Spaß – auch als kurze Runde zwischendurch.'},
+    {id:'badminton', name:'Badminton',     ic:'🏸', xp:20, cat:'spiel', tip:'Unterschätzt anstrengend – eine Stunde reicht völlig.'},
+    {id:'volley',  name:'Volleyball',      ic:'🏐', xp:20, cat:'spiel', tip:'Halle oder Beach – Sprungkraft und Reaktion in einem.'},
+    {id:'martial', name:'Kampfsport',      ic:'🥋', xp:25, cat:'spiel', tip:'Judo, Karate, Ringen – Technik und Kondition zugleich.'},
+    {id:'golf',    name:'Golf / Disc Golf', ic:'⛳', xp:15, cat:'spiel', tip:'Eine Runde bedeutet mehrere Kilometer zu Fuß.'},
+    {id:'vrsport', name:'Bewegungsspiel',  ic:'🎮', xp:15, cat:'spiel', tip:'Ring Fit, Beat Saber oder Tanzspiele – Bewegung bleibt Bewegung.'},
     {id:'hiit',    name:'Zirkeltraining / HIIT', ic:'🔥', xp:25, cat:'sonstiges', tip:'Kurze, intensive Intervalle – 15–20 Min. reichen.'},
+    {id:'physio',  name:'Physio-Übungen',  ic:'🩹', xp:15, cat:'sonstiges', tip:'Die Übungen, die du eigentlich täglich machen solltest.'},
+    {id:'warmup',  name:'Aufwärmen',       ic:'🌡️', xp:5,  cat:'sonstiges', tip:'Zählt als eigene Einheit, wenn du es sonst überspringst.'},
+    {id:'walkcall', name:'Telefonieren im Gehen', ic:'📞', xp:10, cat:'sonstiges', tip:'Jedes längere Gespräch im Stehen oder Gehen führen.'},
     {id:'other',   name:'Sonstige Bewegung', ic:'🎯', xp:10, cat:'sonstiges', tip:'Passt nichts genau? Trag es trotzdem ein – Hauptsache in Bewegung.'}
   ];
   function activityById(id){ return ACTIVITIES.filter(function(a){return a.id===id;})[0]; }
@@ -1265,6 +1316,7 @@
     document.getElementById('ob-step1').classList.add('hidden');
     document.getElementById('ob-step2').classList.remove('hidden');
     document.getElementById('ob-title').textContent='Dein Weg dahin';
+    renderGoalIdeas();
   }
   function obBack(){
     document.getElementById('ob-step2').classList.add('hidden');
