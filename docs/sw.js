@@ -1,4 +1,4 @@
-const CACHE = 'respecyou-ios-1.1';
+const CACHE = 'respecyou-ios-1.2';
 const SHELL = [
   './',
   './index.html',

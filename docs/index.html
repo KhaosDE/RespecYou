@@ -163,6 +163,21 @@
 
   .hidden{ display:none !important; }
 
+  /* Belohnungs-Banner: das Versprechen steht oben, nicht die Zahlen */
+  .promise{ border:3px solid var(--green); background:var(--panel); padding:12px 14px; margin:0 0 16px; box-shadow:4px 4px 0 #000; }
+  .promise.ready{ border-color:var(--yellow); box-shadow:4px 4px 0 #000,0 0 14px var(--yellow); }
+  .promise .plabel{ font-size:10px; letter-spacing:2px; color:var(--dim); text-transform:uppercase; margin-bottom:4px; }
+  .promise .ptext{ font-size:16px; font-weight:bold; line-height:1.25; margin-bottom:8px; word-break:break-word; }
+  .promise .pmeta{ display:flex; justify-content:space-between; gap:10px; font-size:10px; letter-spacing:1px; color:var(--dim); margin-bottom:6px; }
+  .promise .bar-bg{ margin:0; }
+  .promise .pact{ margin-top:10px; }
+  .chips{ display:flex; flex-wrap:wrap; gap:6px; margin:0 0 12px; }
+  .chips button{ font-family:inherit; font-size:10px; letter-spacing:1px; padding:6px 9px; background:var(--screen); color:var(--text);
+    border:2px solid var(--line); cursor:pointer; }
+  .chips button:hover{ border-color:var(--green); }
+  .reward.done{ opacity:.6; }
+  .reward.done .rt{ text-decoration:line-through; }
+  .rbalance{ font-size:10px; letter-spacing:1px; color:var(--dim); margin:-4px 0 8px; text-transform:uppercase; }
   .companion{ text-align:center; margin:0 0 14px; }
   .comp-box{ display:inline-flex; align-items:center; justify-content:center; padding:10px; background:var(--screen); border:4px solid var(--cyan); box-shadow:4px 4px 0 #000; cursor:pointer; transition:transform .15s; }
   .comp-box:active{ transform:scale(.94); }
@@ -187,7 +202,7 @@
 </style>
 </head>
 <body>
-<script>var BUILD={ platform:"ios", version:"1.1" };</script>
+<script>var BUILD={ platform:"ios", version:"1.2" };</script>
 <div class="wrap">
 <div class="device">
 
@@ -222,6 +237,8 @@
     <div class="bar-bg"><div class="bar-fill" id="bar" style="width:0%"></div></div>
   </div>
 
+  <div id="promise"></div>
+
   <div class="stats">
     <div class="stat p"><div class="n" id="s-goals">0</div><div class="l">Ziele</div></div>
     <div class="stat g"><div class="n" id="s-comp">0</div><div class="l">Done</div></div>
@@ -250,6 +267,7 @@
       <div class="sec-title green">Belohnungen</div>
       <button class="pbtn green" onclick="openReward()">+ Belohnung</button>
     </div>
+    <div class="rbalance" id="r-balance"></div>
     <div id="rewards"></div>
   </div>
 
@@ -314,6 +332,34 @@
   </div>
 </div>
 
+<!-- Onboarding: erst das Versprechen, dann der Weg dahin -->
+<div class="overlay hidden" id="omodal">
+  <div class="modal" style="border-color:var(--green)">
+    <h3 style="color:var(--green)" id="ob-title">Dein Versprechen</h3>
+    <div id="ob-step1">
+      <div class="hint" style="text-transform:none;margin:0 0 10px">RespecYou funktioniert anders herum als andere Apps: Du sagst zuerst, was du dir gönnst – und arbeitest dann darauf hin.</div>
+      <label>Was gönnst du dir, wenn du es durchziehst?</label>
+      <input type="text" id="ob-reward" maxlength="40" placeholder="z.B. Ein Tag ganz für mich">
+      <div class="chips" id="ob-ideas"></div>
+      <div class="modal-actions">
+        <button class="pbtn green" style="flex:1" onclick="obNext()">Weiter</button>
+      </div>
+    </div>
+    <div id="ob-step2" class="hidden">
+      <div class="hint" style="text-transform:none;margin:0 0 10px">Gut. Und was musst du dafür regelmäßig tun? Ein Ziel reicht für den Anfang – weitere kannst du jederzeit anlegen.</div>
+      <label>Dein erstes Ziel</label>
+      <input type="text" id="ob-goal" maxlength="40" placeholder="z.B. 20 Minuten spazieren">
+      <label>XP pro Abschluss</label>
+      <input type="number" id="ob-points" value="10" min="1">
+      <div class="hint" style="margin:0 0 10px">Mit 10 XP pro Abschluss erreichst du deine Belohnung nach etwa 15 Abschlüssen.</div>
+      <div class="modal-actions">
+        <button class="pbtn green" style="flex:1" onclick="obFinish()">Los geht\'s</button>
+        <button class="pbtn ghost" onclick="obBack()">Zurück</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Reward modal -->
 <div class="overlay hidden" id="rmodal" onclick="if(event.target===this)closeReward()">
   <div class="modal" style="border-color:var(--green)">
@@ -322,7 +368,8 @@
     <input type="number" id="r-level" value="5" min="1">
     <label>Belohnung</label>
     <input type="text" id="r-text" maxlength="40" placeholder="z.B. Neues Trainings-Shirt">
-    <div class="hint" style="margin:0 0 10px">Kurz &amp; knapp – was genau bekommst du dir? (max. 40 Zeichen)</div>
+    <div class="hint" style="margin:0 0 8px">Kurz &amp; knapp – was genau gönnst du dir? (max. 40 Zeichen)</div>
+    <div class="chips" id="r-ideas"></div>
     <div class="modal-actions">
       <button class="pbtn green" style="flex:1" onclick="saveReward()">Speichern</button>
       <button class="pbtn ghost" onclick="closeReward()">Abbruch</button>
@@ -540,6 +587,7 @@
 
   function load(){ try{ var s=localStorage.getItem('fitnessXP'); if(s) data=JSON.parse(s); }catch(e){}
     if(!data.rewards) data.rewards=[];
+    data.rewards.forEach(function(r){ if(r.redeemed===undefined) r.redeemed=null; });
     if(!data.settings) data.settings={};
     var S=data.settings;
     if(S.reminderHour!=null) delete S.reminderHour; // alte globale Erinnerung -> jetzt je Ziel
@@ -715,6 +763,10 @@
     if(luTimer) clearTimeout(luTimer);
     luTimer=setTimeout(function(){ b.classList.add('hidden'); },1800);
     setTimeout(function(){ companionReact('joy'); },0);
+    try{
+      var justFree=data.rewards.filter(function(r){ return !r.redeemed && r.level===n; })[0];
+      if(justFree) setTimeout(function(){ miniToast('🎁 Freigeschaltet: '+justFree.text); }, 2600);
+    }catch(e){}
     try{ checkThemeUnlocks(n); }catch(e){}
   }
 
@@ -813,14 +865,78 @@
     });
   }
 
+  /* ---- Belohnungen: das Rückgrat der App ----
+     Eine Belohnung durchläuft drei Zustände: gesperrt -> freigeschaltet (Level erreicht) -> eingelöst
+     (mit Datum). Der Banner oben zeigt immer den nächsten Schritt: entweder etwas abzuholen oder das
+     nächste Versprechen mit Fortschritt dorthin. */
+  var REWARD_IDEAS=['Ein Tag ganz für mich','Kinoabend','Neues Trainings-Shirt','Langes Bad',
+    'Lieblingsessen bestellen','Ein Buch','Ausschlafen ohne Wecker','Tag ohne Haushalt',
+    'Konzert oder Ausflug','Neue Kopfhörer','Massage','Wochenende ohne Termine'];
+  function renderIdeas(elId, inputId){
+    var el=document.getElementById(elId); if(!el) return; el.innerHTML='';
+    // Bei jedem Öffnen sechs zufällige Vorschläge, damit das leere Feld nicht abschreckt.
+    REWARD_IDEAS.slice().sort(function(){ return Math.random()-0.5; }).slice(0,6).forEach(function(txt){
+      var b=document.createElement('button'); b.type='button'; b.textContent=txt;
+      b.onclick=function(){ document.getElementById(inputId).value=txt; };
+      el.appendChild(b);
+    });
+  }
+  function rewardsEarned(){ return data.rewards.filter(function(r){ return data.level>=r.level; }); }
+  function rewardsRedeemed(){ return data.rewards.filter(function(r){ return !!r.redeemed; }); }
+  function rewardPending(){  // freigeschaltet, aber noch nicht abgeholt
+    return rewardsEarned().filter(function(r){ return !r.redeemed; })
+      .sort(function(a,b){ return a.level-b.level; })[0];
+  }
+  function rewardNext(){     // nächstes Versprechen, das noch aussteht
+    return data.rewards.filter(function(r){ return !r.redeemed && data.level<r.level; })
+      .sort(function(a,b){ return a.level-b.level; })[0];
+  }
+  function redeemReward(id){
+    var r=data.rewards.filter(function(x){ return x.id===id; })[0]; if(!r) return;
+    if(!confirm('„'+r.text+'“ jetzt einlösen?\n\nDu hast es dir verdient – die Belohnung wandert danach ins Archiv.')) return;
+    r.redeemed=new Date().toISOString();
+    save(); render(); vibrate([120,60,120]);
+    try{ companionReact('joy'); }catch(e){}
+    miniToast('🎁 Eingelöst. Verdient!');
+    try{ if(window.__rescheduleReminder) window.__rescheduleReminder(); }catch(e){}
+  }
+  window.redeemReward=redeemReward;
+  function renderPromise(){
+    var el=document.getElementById('promise'); if(!el) return;
+    var pend=rewardPending();
+    if(pend){
+      el.innerHTML='<div class="promise ready"><div class="plabel">Verdient – noch nicht abgeholt</div>'+
+        '<div class="ptext">🎁 '+esc(pend.text)+'</div>'+
+        '<div class="pmeta"><span>Freigeschaltet ab Level '+pend.level+'</span><span>Level '+data.level+'</span></div>'+
+        '<div class="pact"><button class="pbtn yellow" style="width:100%" onclick="redeemReward('+pend.id+')">Jetzt einlösen</button></div></div>';
+      return;
+    }
+    var nx=rewardNext();
+    if(!nx){
+      var done=rewardsRedeemed().length;
+      el.innerHTML='<div class="promise"><div class="plabel">Dein Versprechen</div>'+
+        '<div class="ptext">Was gönnst du dir als Nächstes?</div>'+
+        '<div class="pmeta"><span>'+(done?('Bisher '+done+' eingelöst'):'Noch nichts festgelegt')+'</span></div>'+
+        '<div class="pact"><button class="pbtn green" style="width:100%" onclick="openReward()">+ Belohnung festlegen</button></div></div>';
+      return;
+    }
+    var base=xpForLevel(data.level), target=xpForLevel(nx.level);
+    var pct=Math.max(0,Math.min(100,((data.totalXP-base)/Math.max(1,target-base))*100));
+    var missing=Math.max(0,target-data.totalXP);
+    el.innerHTML='<div class="promise"><div class="plabel">Dein Versprechen</div>'+
+      '<div class="ptext">'+esc(nx.text)+'</div>'+
+      '<div class="pmeta"><span>Noch '+missing.toLocaleString('de-DE')+' XP</span><span>Level '+data.level+' → '+nx.level+'</span></div>'+
+      '<div class="bar-bg"><div class="bar-fill" style="width:'+pct+'%"></div></div></div>';
+  }
+
   /* rewards */
-  function openReward(){ document.getElementById('r-level').value='5'; document.getElementById('r-text').value=''; document.getElementById('rmodal').classList.remove('hidden'); }
+  function openReward(){ document.getElementById('r-level').value=String(Math.max(2,(data.level||1)+4)); document.getElementById('r-text').value=''; renderIdeas('r-ideas','r-text'); document.getElementById('rmodal').classList.remove('hidden'); }
   function closeReward(){ document.getElementById('rmodal').classList.add('hidden'); }
   function saveReward(){
     var lvl=parseInt(document.getElementById('r-level').value)||1;
     var txt=document.getElementById('r-text').value.trim();
     if(!txt){ alert('Bitte Belohnung eingeben!'); return; }
-    data.rewards.push({ id:Date.now(), level:lvl, text:txt });
+    data.rewards.push({ id:Date.now(), level:lvl, text:txt, redeemed:null, created:Date.now() });
     save(); closeReward(); render();
   }
   function deleteReward(id){ data.rewards=data.rewards.filter(function(r){return r.id!==id;}); save(); render(); }
@@ -967,17 +1083,34 @@
 
     renderCharts();
 
+    renderPromise();
+    var bal=document.getElementById('r-balance');
+    if(bal){
+      var nE=rewardsEarned().length, nR=rewardsRedeemed().length;
+      bal.textContent = data.rewards.length ? (nE+' verdient · '+nR+' eingelöst') : '';
+    }
     var rc=document.getElementById('rewards');
     if(data.rewards.length===0){
-      rc.innerHTML='<div class="empty">Noch keine Belohnungen.<br>Leg fest, was du dir bei welchem Level gönnst!</div>';
+      rc.innerHTML='<div class="empty">Noch keine Belohnungen.<br>Sag dir selbst zu, was du dir gönnst – darauf arbeitest du hin.</div>';
     } else {
       rc.innerHTML='';
-      data.rewards.slice().sort(function(a,b){return a.level-b.level;}).forEach(function(r){
-        var unlocked=data.level>=r.level;
-        var d=document.createElement('div'); d.className='reward '+(unlocked?'unlocked':'locked');
-        d.innerHTML='<div><div class="rt">'+esc(r.text)+'</div><div class="rl">Ab Level '+r.level+'</div></div>'+
-          '<div style="display:flex;gap:8px;align-items:center"><span class="rstate" style="color:'+(unlocked?'var(--green)':'var(--dim)')+'">'+(unlocked?'✓ FREI':'🔒')+'</span><button class="pbtn red" style="padding:4px 8px">✕</button></div>';
-        d.querySelector('button').onclick=function(){ deleteReward(r.id); };
+      // offene zuerst (nach Level), eingelöste danach als Archiv
+      var open=data.rewards.filter(function(r){ return !r.redeemed; }).sort(function(a,b){ return a.level-b.level; });
+      var done=data.rewards.filter(function(r){ return !!r.redeemed; }).sort(function(a,b){ return new Date(b.redeemed)-new Date(a.redeemed); });
+      open.concat(done).forEach(function(r){
+        var unlocked=data.level>=r.level, isDone=!!r.redeemed;
+        var d=document.createElement('div');
+        d.className='reward '+(isDone?'done':(unlocked?'unlocked':'locked'));
+        var sub=isDone ? ('Eingelöst am '+new Date(r.redeemed).toLocaleDateString('de-DE')) : ('Ab Level '+r.level);
+        var right=isDone
+          ? '<span class="rstate" style="color:var(--dim)">✓ ERLEDIGT</span>'
+          : (unlocked
+              ? '<button class="pbtn yellow" style="padding:4px 8px" data-act="redeem">EINLÖSEN</button>'
+              : '<span class="rstate" style="color:var(--dim)">🔒</span>');
+        d.innerHTML='<div><div class="rt">'+esc(r.text)+'</div><div class="rl">'+sub+'</div></div>'+
+          '<div style="display:flex;gap:8px;align-items:center">'+right+'<button class="pbtn red" style="padding:4px 8px" data-act="del">✕</button></div>';
+        var rb=d.querySelector('[data-act="redeem"]'); if(rb) rb.onclick=function(){ redeemReward(r.id); };
+        d.querySelector('[data-act="del"]').onclick=function(){ deleteReward(r.id); };
         rc.appendChild(d);
       });
     }
@@ -1118,6 +1251,41 @@
   }
   function openActivities(){ selActivities=(data.activities||[]).slice(); openCategory=null; renderActivityChecklist(); document.getElementById('amodal').classList.remove('hidden'); }
   function closeActivities(){ document.getElementById('amodal').classList.add('hidden'); }
+  /* ---- Einstieg: erst das Versprechen, dann der Weg dahin ---- */
+  function openOnboarding(){
+    renderIdeas('ob-ideas','ob-reward');
+    document.getElementById('ob-step1').classList.remove('hidden');
+    document.getElementById('ob-step2').classList.add('hidden');
+    document.getElementById('ob-title').textContent='Dein Versprechen';
+    document.getElementById('omodal').classList.remove('hidden');
+  }
+  function obNext(){
+    var t=document.getElementById('ob-reward').value.trim();
+    if(!t){ alert('Schreib kurz auf, was du dir gönnst – das ist der Kern der App.'); return; }
+    document.getElementById('ob-step1').classList.add('hidden');
+    document.getElementById('ob-step2').classList.remove('hidden');
+    document.getElementById('ob-title').textContent='Dein Weg dahin';
+  }
+  function obBack(){
+    document.getElementById('ob-step2').classList.add('hidden');
+    document.getElementById('ob-step1').classList.remove('hidden');
+    document.getElementById('ob-title').textContent='Dein Versprechen';
+  }
+  function obFinish(){
+    var rt=document.getElementById('ob-reward').value.trim();
+    var gn=document.getElementById('ob-goal').value.trim();
+    var gp=parseInt(document.getElementById('ob-points').value)||10;
+    if(!gn){ alert('Nenn ein erstes Ziel – du kannst es später jederzeit ändern.'); return; }
+    data.rewards.push({ id:Date.now(), level:5, text:rt, redeemed:null, created:Date.now() });
+    data.goals.push({ id:Date.now()+1, nid:1, name:gn, points:gp, weekly:0, color:COLORS[0],
+      reminder:{ on:false, time:'19:00', days:[1,2,3,4,5] } });
+    data.onboarded=true; save();
+    document.getElementById('omodal').classList.add('hidden');
+    render();
+    miniToast('Abgemacht. Jetzt liegt es an dir.');
+  }
+  window.openOnboarding=openOnboarding; window.obNext=obNext; window.obBack=obBack; window.obFinish=obFinish;
+
   function saveActivities(){ data.activities=selActivities.slice(); data.onboarded=true; save(); closeActivities(); miniToast('Aktivitäten gespeichert: '+data.activities.length); }
   window.openActivities=openActivities; window.closeActivities=closeActivities; window.saveActivities=saveActivities;
 
@@ -1164,7 +1332,7 @@
   function initEtappe1(){
     if(!data.unlockedThemes){ data.unlockedThemes=THEMES.filter(function(t){return (data.level||1)>=t.lvl;}).map(function(t){return t.id;}); save(); }
     applyTheme(currentThemeId());
-    if(!data.onboarded){ setTimeout(openActivities, 400); }
+    if(!data.onboarded){ setTimeout(openOnboarding, 400); }
   }
 
   /* ================= Etappe 2: Wochen-Challenge ================= */
@@ -1567,14 +1735,14 @@
     /* ---- Erinnerungen je Ziel (Watch spiegelt Handy-Benachrichtigungen automatisch) ----
        Pro Ziel: Uhrzeit + Wochentage. Geplant werden Einzeltermine für die nächsten REM_DAYS Tage
        (bei jedem App-Start/Resume/Abschluss neu), damit ein heute schon erledigtes Ziel still bleibt. */
-    var LEGACY_REMINDER_ID=1001, REM_BASE=20000, REM_DAYS=14;
+    var LEGACY_REMINDER_ID=1001, REWARD_NOTIF_ID=1003, REM_BASE=20000, REM_DAYS=14;
     function goalDoneToday(goalId){ var t=new Date().toDateString(); return data.completions.some(function(c){ return c.goalId===goalId && new Date(c.date).toDateString()===t; }); }
     function scheduleReminder(){
       if(!P.LocalNotifications) return;
       var LN=P.LocalNotifications;
       var enabled=!(data.settings && data.settings.notificationsEnabled===false);
       LN.getPending().catch(function(){ return {notifications:[]}; }).then(function(res){
-        var old=(res&&res.notifications||[]).filter(function(n){ return n.id===LEGACY_REMINDER_ID || n.id>=REM_BASE; }).map(function(n){ return {id:n.id}; });
+        var old=(res&&res.notifications||[]).filter(function(n){ return n.id===LEGACY_REMINDER_ID || n.id===REWARD_NOTIF_ID || n.id>=REM_BASE; }).map(function(n){ return {id:n.id}; });
         return old.length ? LN.cancel({ notifications:old }).catch(function(){}) : null;
       }).then(function(){
         if(!enabled) return;
@@ -1590,6 +1758,14 @@
               schedule:{ at:d, allowWhileIdle:true } });
           }
         });
+        // Khaos erinnert an eine verdiente, aber nicht abgeholte Belohnung
+        var pend=rewardPending();
+        if(pend){
+          var rd=new Date(); rd.setDate(rd.getDate()+1); rd.setHours(19,0,0,0);
+          list.push({ id:REWARD_NOTIF_ID, title:'🎁 Khaos erinnert dich',
+            body:'„'+pend.text+'" hast du dir verdient und noch nicht geholt.',
+            schedule:{ at:rd, allowWhileIdle:true } });
+        }
         if(list.length) return LN.schedule({ notifications:list });
       }).catch(function(){});
     }
