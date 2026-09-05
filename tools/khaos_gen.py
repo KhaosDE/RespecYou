@@ -5,13 +5,13 @@ springt, statt nur zu wachsen), jede männlich und weiblich.
 
   Form 1 (Stufe 1-2): Fellknäuel, Ohren, winkender Arm, keine Hörner
   Form 2 (Stufe 3-4): aufrecht, Hörner brechen durch, Schwanz, dichter Fellkragen
-  Form 3 (Stufe 5-6): Flügel, große Hörner, Brustpanzer
+  Form 3 (Stufe 5-6): Flügel, große Hörner, dichte Mähne
 
 Ohren, Arme, Füße und Schwanz gehören zur SILHOUETTE: erst wird eine gemeinsame Maske gebaut,
 dann laufen Fellkante und Umriss einmal außen herum. Nur Flügel liegen als eigene Ebene dahinter.
 
 Zeichen: . leer | o Umriss | b Fell | d Fellschatten | l helles Fell/Bauch | h Horn
-         e Lichtpunkt im Auge | p Auge/Mundinnenraum | t Fangzahn | a Rüstung | r Wangenröte
+         e Lichtpunkt im Auge | p Auge | t Zahnspitze | a Rüstung | r Wangenröte
 Aufruf: python3 tools/khaos_gen.py > /tmp/khaos.js   (Ausgabe in docs/index.html einsetzen)
 """
 import math, json
@@ -169,7 +169,7 @@ def build(sex, W,H,cx, body_top, body_h, rx, eyes_y, eye, ear_h, arm, foot,
     paint(g,fur,'b')
 
     # ---- Bauch, Schatten, Glanz ----
-    belly=newmask(W,H); add_ellipse(belly,W,H,cx+0.5,cy+ry*0.40,rxs*(0.40 if sex=='f' else 0.46),ry*0.38)
+    belly=newmask(W,H); add_ellipse(belly,W,H,cx+0.5,cy+ry*0.50,rxs*(0.38 if sex=='f' else 0.44),ry*0.34)
     for y in range(H):
         for x in range(W):
             if belly[y][x] and sil[y][x]: g[y][x]='l'
@@ -187,7 +187,7 @@ def build(sex, W,H,cx, body_top, body_h, rx, eyes_y, eye, ear_h, arm, foot,
             for x in range(W):
                 if inner[y][x] and sil[y][x]: g[y][x]='l'
     if armor:
-        ar=newmask(W,H); add_ellipse(ar,W,H,cx+0.5,cy+ry*0.26,rxs*0.46,ry*0.26)
+        ar=newmask(W,H); add_ellipse(ar,W,H,cx+0.5,cy+ry*0.56,rxs*0.42,ry*0.22)
         for y in range(H):
             for x in range(W):
                 if ar[y][x] and sil[y][x]: g[y][x]='a'
@@ -206,12 +206,14 @@ def build(sex, W,H,cx, body_top, body_h, rx, eyes_y, eye, ear_h, arm, foot,
     for i in range(2):
         for yy in (by,by+1):
             put(g,lx-1+i,yy,'r','bdl'); put(g,rx0+ew-2+i,yy,'r','bdl')
+    # Geschlossenes Lächeln: die Mundwinkel liegen eine Zeile höher als die Mitte.
+    # Ab den höheren Stufen schaut links und rechts eine Zahnspitze darunter hervor.
     my=eyes_y+len(eye)+1
-    for i in (-1,0,1): put(g,cx+i,my,'o')
-    put(g,cx-1,my+1,'t'); put(g,cx,my+1,'p'); put(g,cx+1,my+1,'t')
-    if fangs>=2:
-        put(g,cx-2,my,'o'); put(g,cx+2,my,'o')
-        put(g,cx-2,my+1,'t'); put(g,cx+2,my+1,'t'); put(g,cx,my+2,'o')
+    put(g,cx-2,my,'o'); put(g,cx+2,my,'o')          # Mundwinkel, eine Zeile höher
+    for i in (-1,0,1): put(g,cx+i,my+1,'o')         # Mundlinie
+    if fangs>=2:                                     # Zahnspitzen hängen unter den Winkeln heraus
+        for dx in (-2,2):
+            put(g,cx+dx,my+1,'t'); put(g,cx+dx,my+2,'o')   # weiße Spitze mit dunklem Abschluss
     if sex=='m' and muscles>=1:
         py=my+3
         for i in range(2,5): put(g,cx-i,py,'d','bl'); put(g,cx+i,py,'d','bl')
@@ -247,8 +249,8 @@ STAGES=[
       flavor='Zweite Entwicklung: Flügel entfalten sich aus dem Fell.'),
  dict(lvl=50, name='Kampfbestie',cell=5, W=39,H=42,cx=19, body_top=11, body_h=23, rx=8.6, eyes_y=19, eye=EYE_L,
       ear_h=7, arm=dict(y=22,len=3,thick=3), foot=dict(rx=3.0,ry=2.1), horns=d(HORN_XL,y=5,dx=2), tail=6,
-      wing=dict(y=15,len=8,h=11), mane=True, armor=True, fangs=2, muscles=2, seed=17,
-      flavor='Endform: gepanzert, geflügelt, flauschig. Genau wie du.'),
+      wing=dict(y=15,len=8,h=11), mane=True, fangs=2, muscles=2, seed=17,
+      flavor='Endform: mächtige Hörner, weit gespannte Flügel, immer noch flauschig. Genau wie du.'),
 ]
 
 def main():
