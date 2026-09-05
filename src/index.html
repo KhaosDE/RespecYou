@@ -171,6 +171,7 @@
   .promise .pmeta{ display:flex; justify-content:space-between; gap:10px; font-size:10px; letter-spacing:1px; color:var(--dim); margin-bottom:6px; }
   .promise .bar-bg{ margin:0; }
   .promise .pact{ margin-top:10px; }
+  .chips-label{ font-size:10px; font-weight:bold; letter-spacing:1px; color:var(--dim); text-transform:uppercase; margin:0 0 6px; }
   .chips{ display:flex; flex-wrap:wrap; gap:6px; margin:0 0 12px; }
   .chips button{ font-family:inherit; font-size:10px; letter-spacing:1px; padding:6px 9px; background:var(--screen); color:var(--text);
     border:2px solid var(--line); cursor:pointer; }
@@ -340,6 +341,7 @@
       <div class="hint" style="text-transform:none;margin:0 0 10px">RespecYou funktioniert anders herum als andere Apps: Du sagst zuerst, was du dir gönnst – und arbeitest dann darauf hin.</div>
       <label>Was gönnst du dir, wenn du es durchziehst?</label>
       <input type="text" id="ob-reward" maxlength="40" placeholder="z.B. Ein Tag ganz für mich">
+      <div class="chips-label">Vorschläge – tippen zum Übernehmen</div>
       <div class="chips" id="ob-ideas"></div>
       <div class="modal-actions">
         <button class="pbtn green" style="flex:1" onclick="obNext()">Weiter</button>
@@ -349,6 +351,7 @@
       <div class="hint" style="text-transform:none;margin:0 0 10px">Gut. Und was musst du dafür regelmäßig tun? Ein Ziel reicht für den Anfang – weitere kannst du jederzeit anlegen.</div>
       <label>Dein erstes Ziel</label>
       <input type="text" id="ob-goal" maxlength="40" placeholder="z.B. 20 Minuten spazieren">
+      <div class="chips-label">Vorschläge aus dem Aktivitäten-Katalog – tippen zum Übernehmen</div>
       <div class="chips" id="ob-goal-ideas"></div>
       <label>XP pro Abschluss</label>
       <input type="number" id="ob-points" value="10" min="1">
@@ -370,6 +373,7 @@
     <label>Belohnung</label>
     <input type="text" id="r-text" maxlength="40" placeholder="z.B. Neues Trainings-Shirt">
     <div class="hint" style="margin:0 0 8px">Kurz &amp; knapp – was genau gönnst du dir? (max. 40 Zeichen)</div>
+    <div class="chips-label">Vorschläge – tippen zum Übernehmen</div>
     <div class="chips" id="r-ideas"></div>
     <div class="modal-actions">
       <button class="pbtn green" style="flex:1" onclick="saveReward()">Speichern</button>
