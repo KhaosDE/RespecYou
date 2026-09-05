@@ -108,7 +108,43 @@ Secrets sind für niemanden lesbar, auch nicht für mich. In den Logs erscheinen
 
 ---
 
-## Ein Release bauen
+## Lokal bauen statt über Actions
+
+Geht genauso, wenn Android Studio auf dem Rechner steht. Der Unterschied: Der Keystore bleibt
+lokal, es braucht keine Secrets. Unter Windows heißt der Gradle-Aufruf `.\gradlew.bat`, nicht
+`./gradlew`.
+
+```powershell
+# im RespecYou-Repository
+python tools\build.py
+
+# im Capacitor-Projekt
+Remove-Item www\* -Recurse -Force
+Copy-Item <repo>\dist\android\www\* -Destination www -Recurse
+# versionName und versionCode in android\app\build.gradle setzen
+npx cap sync android
+cd android
+.\gradlew.bat assembleRelease `
+  "-Pandroid.injected.signing.store.file=C:\Pfad\zu\respecyou.jks" `
+  "-Pandroid.injected.signing.store.password=..." `
+  "-Pandroid.injected.signing.key.alias=..." `
+  "-Pandroid.injected.signing.key.password=..."
+```
+
+Die fertige Datei liegt unter `android\app\build\outputs\apk\release\`.
+
+Release samt APK anlegen, wenn die GitHub-CLI installiert ist:
+
+```powershell
+gh release create 1.5 RespecYou-v1.5.apk `
+  --title "RespecYou 1.5 (Android, Test)" `
+  --notes-file docs\release-notes\1.5.md
+```
+
+Sonst über die Weboberfläche: Releases → Draft a new release, Tag `1.5`, Text aus
+`docs/release-notes/1.5.md` einfügen, APK hineinziehen.
+
+## Ein Release über Actions bauen
 
 1. Versionsnummern in `VERSION` setzen (`android=1.6`, `ios=…`), committen, pushen.
 2. Tag setzen und pushen:
