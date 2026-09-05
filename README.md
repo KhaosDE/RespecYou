@@ -1,33 +1,51 @@
 # RespecYou
 
-**Skill dich neu · Raus aus der Komfortzone**
+**Versprich dir was. Zieh es durch. Hol es dir.**
 
-RespecYou ist keine weitere Sport-Tracking-App. Es gibt bereits genug davon – Strava, Apple Fitness, Health Connect, die Uhr am Handgelenk. RespecYou konkurriert nicht mit ihnen, sondern ist das **Bindeglied dazwischen**: eine kleine, persönliche Motivationsschicht, die dich dazu bringt, die Tools zu nutzen, die du schon hast, und deine eigenen Ziele wirklich zu erreichen.
+Du hast schon Apps, die messen – Strava, Apple Fitness, Health Connect, die Uhr am Handgelenk.
+RespecYou ist die, die dich losgehen lässt. Es ist kein weiterer Tracker, sondern die Schicht
+darüber: Du sagst dir selbst etwas Echtes zu, und die App nimmt dich beim Wort.
 
-Im Kern ist RespecYou ein Level-Up-System für dein reales Leben: Du legst eigene Ziele fest (vom Workout bis zur Alltagsgewohnheit), sammelst dafür XP, steigst Level auf und schaltest dabei Belohnungen frei – digitale wie eigene, echte.
+Der Ablauf ist umgekehrt zu dem, was andere Apps machen. Zuerst legst du fest, was du dir gönnst,
+wenn du es durchziehst. Danach, was du dafür regelmäßig tun musst. Ab dann zeigt dir der
+Startbildschirm immer dein nächstes Versprechen und wie weit du noch davon entfernt bist. Ist es
+erreicht, holst du dir die Belohnung mit einem Tipp ab – sie wandert mit Datum ins Archiv, und
+deine Bilanz zählt mit: verdient und eingelöst.
 
-## Warum RespecYou?
+## Warum das anders ist
 
-Die meisten Fitness-Apps scheitern nicht an fehlenden Funktionen, sondern daran, dass sie nach zwei Wochen langweilig werden. RespecYou setzt bewusst auf spielerische Motivation statt auf reine Datenerfassung:
+Gewohnheits-Apps setzen darauf, dass die Belohnung im Kopf entsteht: eine Serie, ein Abzeichen,
+ein zufriedenes Haustier. Selbstverpflichtungs-Apps gibt es auch, aber die arbeiten mit Strafe und
+nehmen dir Geld ab, wenn du versagst. Dazwischen liegt nichts. Genau dort sitzt RespecYou.
 
-- **Deine Ziele, nicht vorgegebene.** Du definierst selbst, was für dich zählt – kein starres Programm.
-- **Kleine Schritte zählen.** Der eingebaute Aktivitäten-Katalog (nach Kategorien sortiert: Ausdauer, Kraft, Beweglichkeit & Entspannung, Alltag, Sport & Spiel, Sonstiges) ist eine optionale Ergänzung für Inspiration – nicht Pflicht.
-- **Fortschritt fühlt sich gut an.** XP, Level, Ränge, Achievements und ein wachsender Begleiter machen sichtbar, was sonst unsichtbar bleibt.
-- **Echte Belohnungen.** Neben den digitalen Anreizen kannst du dir selbst reale Belohnungen setzen, die sich mit steigendem Level freischalten.
+- **Du versprichst, die App erinnert.** Nicht an einen Mangel, sondern an ein Guthaben:
+  „Das hast du dir verdient und noch nicht geholt.“
+- **Deine Ziele, nicht vorgegebene.** Vom Workout bis zur Alltagsgewohnheit, mit eigenem XP-Wert.
+  Der Katalog mit über 50 Aktivitäten ist Vorschlag, nicht Vorgabe.
+- **Keine doppelte Erfassung.** RespecYou misst nichts selbst, sondern holt Schritte und Kalorien
+  aus Health Connect bzw. der Health-App. Uhr und Strava zählen mit.
+- **Erinnerungen, die passen.** Uhrzeit und Wochentage pro Ziel, still wenn das Ziel heute schon
+  erledigt ist.
+- **Nichts verlässt dein Gerät.** Kein Konto, keine Anmeldung, keine Cloud.
 
 ## Features
 
-- **XP & Level-System** mit wachsendem Rang/Titel (vom "Neuling" bis "Unaufhaltsam")
+- **Belohnungsvertrag** als Kern: Versprechen festlegen, Fortschritt sehen, einlösen, Bilanz führen.
+  Vorschläge beim Anlegen, überwiegend solche, die nichts kosten
+- **Erinnerungen je Ziel** mit Uhrzeit und Wochentagen (Android-App; Smartwatches spiegeln die
+  Benachrichtigung automatisch)
 - **Eigene Ziele** mit individuellem XP-Wert und optionalem Wochenziel
-- **Aktivitäten-Katalog** mit über 50 Vorschlägen in 6 Kategorien – als Zusatzquelle für die Wochenchallenge, nicht als Zwang
+- **XP & Level-System** mit wachsendem Rang vom „Neuling“ bis „Unaufhaltsam“
+- **Khaos**, dein Begleiter: ein flauschiges Pixelmonster in drei Entwicklungsformen – Fellknäuel,
+  dann Hörner und Schwanz, zuletzt Flügel und Mähne. Männlicher oder weiblicher Körperbau frei
+  wählbar, vier Farben schalten sich mit dem Level frei
+- **Aktivitäten-Katalog** mit über 50 Vorschlägen in 6 Kategorien
 - **Wochenchallenge & Tages-Motivation** mit wählbarem Schwierigkeitsgrad
 - **Achievements** für Meilensteine, einzelne Aktivitäten, Serien und mehr
-- **Khaos**, dein Begleiter: ein flauschiges Pixelmonster, das mit deinem Level sichtbar wächst (alle 10 Level eine neue Form). Männlich oder weiblich wählbar, vier Farben schalten sich mit dem Level frei – dein Fortschritt bleibt dabei immer erhalten
-- **Perks**: Streak-Freeze (rettet eine verpasste Serie), Doppel-XP-Tage, eine "Legendär"-Challenge-Stufe
-- **Erinnerungen je Ziel**: Uhrzeit und Wochentage pro Ziel, Khaos meldet sich nur, wenn das Ziel heute noch offen ist (Android-App; Smartwatches spiegeln die Benachrichtigung)
-- **Belohnungsvertrag** als Kern: Du legst zuerst fest, was du dir gönnst, arbeitest darauf hin, löst die Belohnung ein und siehst deine Bilanz. Vorschläge helfen beim Anlegen, überwiegend solche, die nichts kosten
+- **Perks**: Streak-Freeze rettet eine verpasste Serie, Doppel-XP-Tage, eine „Legendär“-Challenge-Stufe
 - **Themes**: mehrere freischaltbare Farbdarstellungen im Retro-Terminal-Look
-- **Automatischer XP-Gewinn aus echten Aktivitätsdaten** – auf Android über Health Connect (Handy/Watch/Samsung Health), auf iPhone über eine leichtgewichtige Bridge, die Schritte/Kalorien aus der Health-App abholt (siehe unten)
+- **Automatischer XP-Gewinn aus echten Aktivitätsdaten** – auf Android über Health Connect
+  (Handy/Watch/Samsung Health), auf iPhone über eine leichtgewichtige Bridge (siehe unten)
 
 ## Plattformen
 
@@ -64,6 +82,15 @@ Nach jeder Änderung an `src/index.html` einmal `python3 tools/build.py` ausfüh
 | Auslieferung | Capacitor-Build, signiertes APK | GitHub Pages, „Zum Home-Bildschirm“ |
 
 Daten bleiben lokal auf dem Gerät (`localStorage`), keine Cloud-Anbindung außer der optionalen iPhone-Bridge.
+
+## Konzept
+
+Die Überlegungen hinter der App liegen unter `notes/`:
+
+- `konzept-check-2026-09.html` – Marktlage, Wettbewerb, was für ein bezahltes Produkt fehlt,
+  Preismodell und Steuerfragen
+- `konzept-belohnungsvertrag.html` – warum der Belohnungsvertrag das Alleinstellungsmerkmal ist
+  und was das für Produkt und Store bedeutet
 
 ## Support
 
