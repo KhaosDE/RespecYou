@@ -1,13 +1,23 @@
+# Python
 __pycache__/
 *.pyc
 
-# Capacitor / Android
-app/node_modules/
+# Node
+**/node_modules/
+
+# Capacitor: wird bei jedem Build aus dist/android/www erzeugt
 app/www/
-app/android/build/
-app/android/app/build/
-app/android/.gradle/
-app/android/local.properties
-app/android/app/src/main/assets/public/
+**/android/app/src/main/assets/public/
+
+# Gradle / Android Studio
+**/build/
+**/.gradle/
+**/.idea/
+**/local.properties
+**/captures/
+*.iml
+
+# Signaturschluessel gehoeren NIE ins Repository
 *.jks
 *.keystore
+key.properties
