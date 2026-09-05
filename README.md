@@ -19,12 +19,13 @@ Die meisten Fitness-Apps scheitern nicht an fehlenden Funktionen, sondern daran,
 
 - **XP & Level-System** mit wachsendem Rang/Titel (vom "Neuling" bis "Unaufhaltsam")
 - **Eigene Ziele** mit individuellem XP-Wert und optionalem Wochenziel
-- **Aktivitäten-Katalog** mit über 25 Vorschlägen in 6 Kategorien – als Zusatzquelle für die Wochenchallenge, nicht als Zwang
+- **Aktivitäten-Katalog** mit über 50 Vorschlägen in 6 Kategorien – als Zusatzquelle für die Wochenchallenge, nicht als Zwang
 - **Wochenchallenge & Tages-Motivation** mit wählbarem Schwierigkeitsgrad
 - **Achievements** für Meilensteine, einzelne Aktivitäten, Serien und mehr
-- **Khaos**, dein Begleiter: ein kleines Pixelmonster, das mit deinem Level sichtbar wächst (alle 10 Level eine neue Form) und dessen Aussehen du ab bestimmten Leveln frei wählen kannst – dein Fortschritt bleibt dabei immer erhalten
+- **Khaos**, dein Begleiter: ein flauschiges Pixelmonster, das mit deinem Level sichtbar wächst (alle 10 Level eine neue Form). Männlich oder weiblich wählbar, vier Farben schalten sich mit dem Level frei – dein Fortschritt bleibt dabei immer erhalten
 - **Perks**: Streak-Freeze (rettet eine verpasste Serie), Doppel-XP-Tage, eine "Legendär"-Challenge-Stufe
-- **Eigene Belohnungen**, die du dir selbst bei bestimmten Leveln setzt
+- **Erinnerungen je Ziel**: Uhrzeit und Wochentage pro Ziel, Khaos meldet sich nur, wenn das Ziel heute noch offen ist (Android-App; Smartwatches spiegeln die Benachrichtigung)
+- **Belohnungsvertrag** als Kern: Du legst zuerst fest, was du dir gönnst, arbeitest darauf hin, löst die Belohnung ein und siehst deine Bilanz. Vorschläge helfen beim Anlegen, überwiegend solche, die nichts kosten
 - **Themes**: mehrere freischaltbare Farbdarstellungen im Retro-Terminal-Look
 - **Automatischer XP-Gewinn aus echten Aktivitätsdaten** – auf Android über Health Connect (Handy/Watch/Samsung Health), auf iPhone über eine leichtgewichtige Bridge, die Schritte/Kalorien aus der Health-App abholt (siehe unten)
 
@@ -39,10 +40,30 @@ Da Apple HealthKit keinen Web-Zugriff erlaubt, holt sich die iOS-Version Schritt
 
 ## Technik
 
-Eine einzige HTML-Datei (`www/index.html`) als Basis, plattformspezifisch erweitert:
-- Android-Build über [Capacitor](https://capacitorjs.com/)
-- iOS/Web über eine eigenständige PWA (Manifest, Service Worker, iOS-Icons) im `docs/`-Ordner, gehostet via GitHub Pages
-- Daten bleiben lokal auf dem Gerät (`localStorage`), keine Cloud-Anbindung außer der optionalen iPhone-Bridge
+Eine gemeinsame Quelle, zwei getrennte Plattform-Fassungen mit eigenen Versionsnummern:
+
+```
+src/index.html              gemeinsame Quelle (die ganze App)
+VERSION                     Versionsnummern, getrennt für android und ios
+tools/build.py              erzeugt beide Fassungen
+  -> docs/                  iOS/Web (PWA, GitHub Pages)
+  -> dist/android/www/      Android (in das lokale Capacitor-Projekt nach www/ kopieren)
+tools/khaos_gen.py          erzeugt die Khaos-Pixelraster (Ausgabe in src/index.html einsetzen)
+tools/preview.py            baut eine einzelne, in sich geschlossene Datei zum Verschicken (--test
+                            fügt einen Knopf zum Zurücksetzen hinzu)
+```
+
+Nach jeder Änderung an `src/index.html` einmal `python3 tools/build.py` ausführen – erst dann sind
+`docs/` und `dist/` aktuell. Was sich zwischen den Fassungen unterscheidet:
+
+| | Android | iOS/Web |
+|---|---|---|
+| Erinnerungen je Ziel | ja (geplante Benachrichtigungen) | nein, technisch nicht möglich |
+| Health-Daten | Health Connect | iPhone-Bridge über Kurzbefehl |
+| Update-Suche in der App | ja (APK aus den Releases) | nein, Store bzw. Neuladen |
+| Auslieferung | Capacitor-Build, signiertes APK | GitHub Pages, „Zum Home-Bildschirm“ |
+
+Daten bleiben lokal auf dem Gerät (`localStorage`), keine Cloud-Anbindung außer der optionalen iPhone-Bridge.
 
 ## Support
 
